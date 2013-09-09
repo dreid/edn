@@ -22,6 +22,11 @@ class Keyword(namedtuple("Keyword", "name prefix type")):
         return super(Keyword, cls).__new__(cls, name, prefix, Keyword._MARKER)
 
 
+# XXX: jml is not convinced that it's best to decode vectors or lists to
+# tuples.  Sure that grants immutability, but it seems weird.  I'd much rather
+# a conversion to regular Python lists, or to some proper immutable linked
+# list / vector implementation.  The best thing would be to allow us to plug
+# in what we'd like these things to be decoded to, I guess.
 class Vector(tuple):
     pass
 
