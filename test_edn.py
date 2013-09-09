@@ -146,6 +146,10 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual("/", dumps(Symbol("/")))
         self.assertEqual("foo/bar", dumps(Symbol("bar", "foo")))
 
+    def test_keyword(self):
+        self.assertEqual(":foo", dumps(Keyword("foo")))
+        self.assertEqual(":my/foo", dumps(Keyword("foo", "my")))
+
 
 if __name__ == '__main__':
     import unittest

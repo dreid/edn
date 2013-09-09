@@ -58,8 +58,14 @@ def _dump_str(obj):
 
 def _dump_symbol(obj):
     if obj.prefix:
-        return '/'.join([obj.prefix, obj.name])
+        return '%s/%s' % (obj.prefix, obj.name)
     return obj.name
+
+
+def _dump_keyword(obj):
+    if obj.prefix:
+        return ':%s/%s' % (obj.prefix, obj.name)
+    return ':' + obj.name
 
 
 def dumps(obj):
@@ -71,6 +77,7 @@ def dumps(obj):
         (float, str),
         (str, _dump_str),
         (type(None), lambda x: 'nil'),
+        (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
     ]
     for base_type, dump_rule in RULES:
