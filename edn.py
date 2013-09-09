@@ -32,6 +32,7 @@ class Vector(tuple):
     pass
 
 
+# XXX: So I guess this means we're taking
 TaggedValue = namedtuple("TaggedValue", "tag value")
 
 # XXX: There needs to be a character type and a string-that-escapes-newlines
@@ -89,9 +90,21 @@ def _dump_dict(obj):
 
 INST = Symbol('#inst')
 def _dump_inst(obj):
+    # XXX: Re-implement this in terms of taggedvalue when we've got it.
     return map(dumps, [INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')])
 
 
+# XXX: It'd be interesting to see how clojure does it, but I reckon that a map
+# of symbols to a read function and a write function is the best way to handle
+# tagged values.  The write function would return a known out-of-band value if
+# it is given a value that's not appropriate for it.
+#
+# Variants:
+# - two maps, one for parsing, one for dumping
+# - (optional?) is this a #foo? predicate included in dumping map
+
+
+# XXX: Not directly tested
 def _flatten(tokens):
     if isinstance(tokens, (list, tuple)):
         for token in tokens:
@@ -101,6 +114,8 @@ def _flatten(tokens):
         yield tokens
 
 
+# XXX: Not directly tested
+# XXX: Doesn't do commas between dict entries
 def _format(tokens):
     last_token = None
     open_brackets = frozenset(['{', '#{', '(', '[', None])
@@ -111,6 +126,9 @@ def _format(tokens):
         yield token
         last_token = token
 
+# XXX: Pretty printer
+
+# XXX: Maybe a default handler for namedtuples?
 
 def dumps(obj):
     # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
