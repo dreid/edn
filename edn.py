@@ -82,13 +82,12 @@ def dumps(obj):
     # way to extend this -- jml
     RULES = [
         (bool, _dump_bool),
-        (int, str),
-        (float, str),
+        ((int, float), str),
         (str, _dump_str),
         (type(None), lambda x: 'nil'),
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
-        (tuple, _dump_list),
+        ((list, tuple), _dump_list),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):

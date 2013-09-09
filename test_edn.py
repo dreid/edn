@@ -150,10 +150,15 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual(":foo", dumps(Keyword("foo")))
         self.assertEqual(":my/foo", dumps(Keyword("foo", "my")))
 
-    def test_list(self):
+    def test_tuple(self):
         self.assertEqual("()", dumps(()))
         self.assertEqual("(() ())", dumps(((), ())))
         self.assertEqual("(a)", dumps((Symbol('a'),)))
+
+    def test_list(self):
+        self.assertEqual("()", dumps([]))
+        self.assertEqual("(() ())", dumps([[], []]))
+        self.assertEqual("(a)", dumps([Symbol('a')]))
 
 
 if __name__ == '__main__':
