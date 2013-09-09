@@ -106,6 +106,9 @@ class DumpsTestCase(unittest.TestCase):
     def test_nil(self):
         self.assertEqual('nil', dumps(None))
 
+    def test_integer(self):
+        self.assertEqual('1', dumps(1))
+
 
 if __name__ == '__main__':
     import unittest

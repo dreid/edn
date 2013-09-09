@@ -43,5 +43,7 @@ def loads(string):
 
 
 def dumps(obj):
+    if isinstance(obj, int):
+        return str(obj)
     return 'nil'
 
