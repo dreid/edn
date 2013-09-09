@@ -1,3 +1,4 @@
+import datetime
 import unittest
 
 from edn import edn, dumps, loads, Symbol, Keyword, Vector, TaggedValue
@@ -174,6 +175,12 @@ class DumpsTestCase(unittest.TestCase):
         self.assertIn(
             dumps({Keyword('foo'): 'bar', Keyword('baz'): 'qux'}),
             set(['{:foo "bar", :baz "qux"}', '{:baz "qux", :foo "bar"}']))
+
+    def test_datetime(self):
+        # XXX: Hardcoding the timezone is so awfully wrong, but I've got no
+        # net connection and no idea what rfc-3339-format does.
+        sometime = datetime.datetime(2012, 5, 12, 14, 30, 0)
+        self.assertEqual('#inst "2012-05-12T14:30.00Z"', dumps(sometime))
 
 
 if __name__ == '__main__':

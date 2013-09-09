@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import datetime
 
 from parsley import makeGrammar
 
@@ -88,6 +89,12 @@ def _dump_dict(obj):
         for k, v in obj.items()) + '}'
 
 
+INST = Symbol('#inst')
+def _dump_inst(obj):
+    return ' '.join(map(
+        dumps, [INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')]))
+
+
 def dumps(obj):
     # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
     # way to extend this -- jml
@@ -101,6 +108,7 @@ def dumps(obj):
         ((list, tuple), _dump_list),
         ((set, frozenset), _dump_set),
         (dict, _dump_dict),
+        (datetime, _dump_inst),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
