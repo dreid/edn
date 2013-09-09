@@ -46,6 +46,9 @@ def loads(string):
 
 
 def dumps(obj):
+    # XXX: Not only is this an intrinsically horrible way of doing things, but
+    # it occurs to me that the 'e' in 'edn' means that there should be a way
+    # to extend this -- jml
     if isinstance(obj, bool):
         if obj:
             return 'true'
