@@ -109,6 +109,11 @@ class DumpsTestCase(unittest.TestCase):
     def test_integer(self):
         self.assertEqual('1', dumps(1))
 
+    def test_float(self):
+        # At least I have some idea of how ignorant this makes me look.
+        self.assertEqual('0.3', dumps(0.3))
+
+
 
 if __name__ == '__main__':
     import unittest
