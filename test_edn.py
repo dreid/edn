@@ -140,6 +140,12 @@ class DumpsTestCase(unittest.TestCase):
         # XXX: No character support yet.  Need a type for it or something.
         self.assertEqual('"a"', dumps('a'))
 
+    def test_symbol(self):
+        self.assertEqual("foo", dumps(Symbol("foo")))
+        self.assertEqual(".foo", dumps(Symbol(".foo")))
+        self.assertEqual("/", dumps(Symbol("/")))
+        self.assertEqual("foo/bar", dumps(Symbol("bar", "foo")))
+
 
 if __name__ == '__main__':
     import unittest

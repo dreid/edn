@@ -56,8 +56,10 @@ def _dump_str(obj):
     return '"%s"' % (repr(obj)[1:-1].replace('"', '\\"'),)
 
 
-def _dump_none(obj=None):
-    return 'nil'
+def _dump_symbol(obj):
+    if obj.prefix:
+        return '/'.join([obj.prefix, obj.name])
+    return obj.name
 
 
 def dumps(obj):
@@ -69,6 +71,7 @@ def dumps(obj):
         (float, str),
         (str, _dump_str),
         (type(None), lambda x: 'nil'),
+        (Symbol, _dump_symbol),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
