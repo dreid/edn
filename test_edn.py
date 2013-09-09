@@ -160,6 +160,21 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual("(() ())", dumps([[], []]))
         self.assertEqual("(a)", dumps([Symbol('a')]))
 
+    def test_set(self):
+        self.assertEqual("#{}", dumps(frozenset()))
+        self.assertIn(
+            dumps(set([1, 2, 3])),
+            set(["#{1 2 3}", "#{1 3 2}",
+                 "#{2 1 3}", "#{2 3 1}",
+                 "#{3 1 2}", "#{3 2 1}"]))
+
+    def test_dict(self):
+        self.assertEqual("{}", dumps({}))
+        self.assertEqual('{:foo "bar"}', dumps({Keyword('foo'): 'bar'}))
+        self.assertIn(
+            dumps({Keyword('foo'): 'bar', Keyword('baz'): 'qux'}),
+            set(['{:foo "bar", :baz "qux"}', '{:baz "qux", :foo "bar"}']))
+
 
 if __name__ == '__main__':
     import unittest

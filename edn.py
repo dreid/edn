@@ -77,6 +77,17 @@ def _dump_list(obj):
     return '(' + ' '.join(map(dumps, obj)) + ')'
 
 
+def _dump_set(obj):
+    return '#{' + ' '.join(map(dumps, obj)) + '}'
+
+
+def _dump_dict(obj):
+    # XXX: Comma is optional.  Should there be an option?
+    return '{' + ', '.join(
+        '%s %s' % (dumps(k), dumps(v))
+        for k, v in obj.items()) + '}'
+
+
 def dumps(obj):
     # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
     # way to extend this -- jml
@@ -88,6 +99,8 @@ def dumps(obj):
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
         ((list, tuple), _dump_list),
+        ((set, frozenset), _dump_set),
+        (dict, _dump_dict),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
