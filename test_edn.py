@@ -182,6 +182,11 @@ class DumpsTestCase(unittest.TestCase):
         sometime = datetime.datetime(2012, 5, 12, 14, 30, 0)
         self.assertEqual('#inst "2012-05-12T14:30.00Z"', dumps(sometime))
 
+    def test_tagged_value(self):
+        self.assertEqual(
+            '#foo bar',
+            dumps(TaggedValue(Symbol('foo'), Symbol('bar'))))
+
 
 if __name__ == '__main__':
     import unittest
