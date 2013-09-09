@@ -28,6 +28,9 @@ class Vector(tuple):
 
 TaggedValue = namedtuple("TaggedValue", "tag value")
 
+# XXX: There needs to be a character type and a string-that-escapes-newlines
+# type in order to have full roundtripping.
+
 edn = makeGrammar(open('edn.parsley').read(),
                   {
                     'Symbol': Symbol,
@@ -53,5 +56,6 @@ def dumps(obj):
     elif isinstance(obj, float):
         # bwahahahahahaha
         return str(obj)
+    elif isinstance(obj, str):
+        return '"%s"' % (repr(obj)[1:-1].replace('"', '\\"'),)
     return 'nil'
-

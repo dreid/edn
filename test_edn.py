@@ -117,6 +117,29 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual('true', dumps(True))
         self.assertEqual('false', dumps(False))
 
+    # XXX: I wonder what edn does for unicode
+
+    def test_simple_strings(self):
+        self.assertEqual('"foo"', dumps('foo'))
+
+    def test_newlines(self):
+        # It doesn't have to be this way.  EDN allows literal newlines in
+        # strings, but the equality definition says that 'foo\nbar' is not
+        # equal to 'foo
+        # bar'.  Thus, it's equally valid to not escape the newline but to
+        # instead insert a literal space.  This is possibly a bug in the
+        # spec.
+        self.assertEqual('"foo\\nbar"', dumps('foo\nbar'))
+
+    def test_escaping(self):
+        self.assertEqual('"foo\\rbar"', dumps('foo\rbar'))
+        self.assertEqual(r'"foo\\bar"', dumps(r'foo\bar'))
+        self.assertEqual('"foo\\"bar"', dumps('foo"bar'))
+
+    def test_character(self):
+        # XXX: No character support yet.  Need a type for it or something.
+        self.assertEqual('"a"', dumps('a'))
+
 
 if __name__ == '__main__':
     import unittest
