@@ -68,6 +68,10 @@ def _dump_keyword(obj):
     return ':' + obj.name
 
 
+def _dump_list(obj):
+    return '(' + ' '.join(map(dumps, obj)) + ')'
+
+
 def dumps(obj):
     # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
     # way to extend this -- jml
@@ -79,6 +83,7 @@ def dumps(obj):
         (type(None), lambda x: 'nil'),
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
+        (tuple, _dump_list),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
