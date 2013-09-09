@@ -45,20 +45,32 @@ def loads(string):
     return edn(string).edn()
 
 
-def dumps(obj):
-    # XXX: Not only is this an intrinsically horrible way of doing things, but
-    # it occurs to me that the 'e' in 'edn' means that there should be a way
-    # to extend this -- jml
-    if isinstance(obj, bool):
-        if obj:
-            return 'true'
-        else:
-            return 'false'
-    elif isinstance(obj, int):
-        return str(obj)
-    elif isinstance(obj, float):
-        # bwahahahahahaha
-        return str(obj)
-    elif isinstance(obj, str):
-        return '"%s"' % (repr(obj)[1:-1].replace('"', '\\"'),)
+def _dump_bool(obj):
+    if obj:
+        return 'true'
+    else:
+        return 'false'
+
+
+def _dump_str(obj):
+    return '"%s"' % (repr(obj)[1:-1].replace('"', '\\"'),)
+
+
+def _dump_none(obj=None):
     return 'nil'
+
+
+def dumps(obj):
+    # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
+    # way to extend this -- jml
+    RULES = [
+        (bool, _dump_bool),
+        (int, str),
+        (float, str),
+        (str, _dump_str),
+        (type(None), lambda x: 'nil'),
+    ]
+    for base_type, dump_rule in RULES:
+        if isinstance(obj, base_type):
+            return dump_rule(obj)
+    raise ValueError("Cannot encode %r" % (obj,))
