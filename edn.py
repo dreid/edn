@@ -40,3 +40,8 @@ edn = makeGrammar(open('edn.parsley').read(),
 
 def loads(string):
     return edn(string).edn()
+
+
+def dumps(obj):
+    return 'nil'
+

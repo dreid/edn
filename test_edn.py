@@ -1,6 +1,6 @@
 import unittest
 
-from edn import edn, loads, Symbol, Keyword, Vector, TaggedValue
+from edn import edn, dumps, loads, Symbol, Keyword, Vector, TaggedValue
 
 
 
@@ -99,6 +99,12 @@ class LoadsTestCase(unittest.TestCase):
     def test_structure(self):
         self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
         self.assertEqual({1: 2, 3: 4}, loads('{1 2, 3 4}'))
+
+
+class DumpsTestCase(unittest.TestCase):
+
+    def test_nil(self):
+        self.assertEqual('nil', dumps(None))
 
 
 if __name__ == '__main__':
