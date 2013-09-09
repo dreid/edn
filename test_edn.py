@@ -113,6 +113,9 @@ class DumpsTestCase(unittest.TestCase):
         # At least I have some idea of how ignorant this makes me look.
         self.assertEqual('0.3', dumps(0.3))
 
+    def test_booleans(self):
+        self.assertEqual('true', dumps(True))
+        self.assertEqual('false', dumps(False))
 
 
 if __name__ == '__main__':

@@ -43,7 +43,12 @@ def loads(string):
 
 
 def dumps(obj):
-    if isinstance(obj, int):
+    if isinstance(obj, bool):
+        if obj:
+            return 'true'
+        else:
+            return 'false'
+    elif isinstance(obj, int):
         return str(obj)
     elif isinstance(obj, float):
         # bwahahahahahaha
