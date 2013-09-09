@@ -174,7 +174,7 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual('{:foo "bar"}', dumps({Keyword('foo'): 'bar'}))
         self.assertIn(
             dumps({Keyword('foo'): 'bar', Keyword('baz'): 'qux'}),
-            set(['{:foo "bar", :baz "qux"}', '{:baz "qux", :foo "bar"}']))
+            set(['{:foo "bar" :baz "qux"}', '{:baz "qux" :foo "bar"}']))
 
     def test_datetime(self):
         # XXX: Hardcoding the timezone is so awfully wrong, but I've got no

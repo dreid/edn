@@ -64,35 +64,52 @@ def _dump_str(obj):
 
 def _dump_symbol(obj):
     if obj.prefix:
-        return '%s/%s' % (obj.prefix, obj.name)
+        return ['%s/%s' % (obj.prefix, obj.name)]
     return obj.name
 
 
 def _dump_keyword(obj):
     if obj.prefix:
-        return ':%s/%s' % (obj.prefix, obj.name)
+        return [':%s/%s' % (obj.prefix, obj.name)]
     return ':' + obj.name
 
 
 def _dump_list(obj):
-    return '(' + ' '.join(map(dumps, obj)) + ')'
+    return ['(', map(dumps, obj), ')']
 
 
 def _dump_set(obj):
-    return '#{' + ' '.join(map(dumps, obj)) + '}'
+    return ['#{', map(dumps, obj), '}']
 
 
 def _dump_dict(obj):
     # XXX: Comma is optional.  Should there be an option?
-    return '{' + ', '.join(
-        '%s %s' % (dumps(k), dumps(v))
-        for k, v in obj.items()) + '}'
+    return ['{', [[dumps(k), dumps(v)] for k, v in obj.items()], '}']
 
 
 INST = Symbol('#inst')
 def _dump_inst(obj):
-    return ' '.join(map(
-        dumps, [INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')]))
+    return map(dumps, [INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')])
+
+
+def _flatten(tokens):
+    if isinstance(tokens, (list, tuple)):
+        for token in tokens:
+            for subtoken in _flatten(token):
+                yield subtoken
+    else:
+        yield tokens
+
+
+def _format(tokens):
+    last_token = None
+    open_brackets = frozenset(['{', '#{', '(', '[', None])
+    close_brackets = '})]'
+    for token in tokens:
+        if last_token not in open_brackets and token not in close_brackets:
+            yield ' '
+        yield token
+        last_token = token
 
 
 def dumps(obj):
@@ -100,9 +117,9 @@ def dumps(obj):
     # way to extend this -- jml
     RULES = [
         (bool, _dump_bool),
-        ((int, float), str),
+        ((int, float), lambda x: [str(x)]),
         (str, _dump_str),
-        (type(None), lambda x: 'nil'),
+        (type(None), lambda x: ['nil']),
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
         ((list, tuple), _dump_list),
@@ -112,5 +129,6 @@ def dumps(obj):
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
-            return dump_rule(obj)
+            tokens = dump_rule(obj)
+            return ''.join(_format(_flatten(tokens)))
     raise ValueError("Cannot encode %r" % (obj,))
