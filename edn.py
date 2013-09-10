@@ -94,6 +94,10 @@ def _dump_inst(obj):
     return map(dumps, [INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')])
 
 
+def _dump_tagged_value(obj):
+    return map(dumps, [obj.tag, obj.value])
+
+
 # XXX: It'd be interesting to see how clojure does it, but I reckon that a map
 # of symbols to a read function and a write function is the best way to handle
 # tagged values.  The write function would return a known out-of-band value if
@@ -140,6 +144,7 @@ def dumps(obj):
         (type(None), lambda x: ['nil']),
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
+        (TaggedValue, _dump_tagged_value),
         ((list, tuple), _dump_list),
         ((set, frozenset), _dump_set),
         (dict, _dump_dict),
