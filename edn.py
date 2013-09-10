@@ -90,8 +90,8 @@ def _dump_dict(obj):
 
 INST = Symbol('#inst')
 def _dump_inst(obj):
-    # XXX: Re-implement this in terms of taggedvalue when we've got it.
-    return map(dumps, [INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')])
+    return _dump_tagged_value(
+        TaggedValue(INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')))
 
 
 def _dump_tagged_value(obj):
