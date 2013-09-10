@@ -32,7 +32,6 @@ class Vector(tuple):
     pass
 
 
-# XXX: So I guess this means we're taking
 TaggedValue = namedtuple("TaggedValue", "tag value")
 
 # XXX: There needs to be a character type and a string-that-escapes-newlines
