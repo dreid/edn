@@ -108,6 +108,7 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual('nil', dumps(None))
 
     def test_integer(self):
+        # XXX: Currently no way of specifying N suffix
         self.assertEqual('1', dumps(1))
 
     def test_float(self):
