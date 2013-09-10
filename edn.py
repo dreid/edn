@@ -135,7 +135,14 @@ def _format(tokens):
 
 def dumps(obj):
     # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
-    # way to extend this -- jml
+    # way to extend this.  Best way I've come up with is passing in a list of
+    # handlers that can each say "I don't know" and then using the first one
+    # that does, deferring to the builtins if none do. -- jml
+
+    # XXX: All in all, I think this provides a retort for dash's interesting
+    # but flippant remark that Lisp is for people who are afraid of parsers.
+    # It's only half true.  It's also for people who are afraid of printers.
+    # -- jml
     RULES = [
         (bool, _dump_bool),
         ((int, float), lambda x: [str(x)]),
