@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 from functools import partial
+import re
 
 from parsley import makeGrammar, wrapGrammar
 
@@ -36,7 +37,22 @@ class Vector(tuple):
 TaggedValue = namedtuple("TaggedValue", "tag value")
 
 
-DEFAULT_HANDLERS = {}
+INST = Symbol('inst')
+
+
+def _make_inst(date_str):
+    # XXX: What's a timezone?
+    # XXX: Oh, the irony.  Should probably do this with parsley.  -- jml
+    easy, hard = date_str.split('.')
+    instant = datetime.strptime(easy, '%Y-%m-%dT%H:%M:%S')
+    fractional_seconds = re.match(r'^(\d+)', hard).group(1)
+    microsecond = int(fractional_seconds) * 10 ** (6 - len(fractional_seconds))
+    return instant.replace(microsecond=microsecond)
+
+
+BUILTIN_READ_HANDLERS = {
+    INST: _make_inst,
+}
 
 
 def make_tagged_value(handlers, symbol, value):
@@ -55,7 +71,7 @@ _unwrapped_edn = makeGrammar(
         'Symbol': Symbol,
         'Keyword': Keyword,
         'Vector': Vector,
-        'TaggedValue': partial(make_tagged_value, DEFAULT_HANDLERS),
+        'TaggedValue': partial(make_tagged_value, BUILTIN_READ_HANDLERS),
     },
     name='edn',
     unwrap=True)
@@ -122,7 +138,6 @@ def _dump_dict(obj):
     return ['{', [[dumps(k), dumps(v)] for k, v in obj.items()], '}']
 
 
-INST = Symbol('inst')
 def _dump_inst(obj):
     return _dump_tagged_value(
         TaggedValue(INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')))

@@ -138,6 +138,12 @@ class LoadsTestCase(unittest.TestCase):
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, Vector([1, 2])), parsed)
 
+    def test_inst(self):
+        text = '#inst "1985-04-12T23:20:50.52Z"'
+        parsed = loads(text)
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, 520000), parsed)
+
 
 class DumpsTestCase(unittest.TestCase):
 
