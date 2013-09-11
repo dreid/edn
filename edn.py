@@ -197,6 +197,7 @@ def dumps(obj):
     RULES = [
         (bool, _dump_bool),
         ((int, float), lambda x: [str(x)]),
+        (long, lambda x: str(x) + 'N'),
         (str, _dump_str),
         (type(None), lambda x: ['nil']),
         (Keyword, _dump_keyword),
