@@ -13,7 +13,6 @@ from edn import (
 )
 
 
-
 class EDNTestCase(unittest.TestCase):
     def test_nil(self):
         self.assertEqual(edn("nil").nil(), None)
@@ -94,9 +93,6 @@ baz\"""").string(), '\nfoo\nbar\nbaz')
             self.assertEqual(edn(edn_str).set(), expected)
 
     def test_tag(self):
-        # XXX: edn is supposed to be extensible.  Thus there ought to be a way
-        # of registering a handler for foo/bar that returns a valid object.  I
-        # haven't bothered to figure out how to do that with parsley.  -- jml
         self.assertEqual(edn('#foo/bar baz').tag(),
                          TaggedValue(Symbol('bar', 'foo'), Symbol('baz')))
 
