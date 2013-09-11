@@ -318,6 +318,11 @@ class DumpsTestCase(unittest.TestCase):
             '#foo bar',
             dumps(TaggedValue(Symbol('foo'), Symbol('bar'))))
 
+    def test_uuid(self):
+        uid = uuid.UUID("f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
+        text = '#uuid "%s"' % (uid,)
+        self.assertEqual(text, dumps(uid))
+
 
 if __name__ == '__main__':
     import unittest
