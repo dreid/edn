@@ -192,6 +192,10 @@ def _dump_inst(obj):
     return _dump_tagged_value(TaggedValue(INST, obj.isoformat()))
 
 
+def _dump_uuid(obj):
+    return _dump_tagged_value(TaggedValue(UUID, str(obj)))
+
+
 def _dump_tagged_value(obj):
     return map(dumps, [Symbol('#' + obj.tag.name), obj.value])
 
@@ -246,6 +250,7 @@ def dumps(obj):
         ((set, frozenset), _dump_set),
         (dict, _dump_dict),
         (datetime.datetime, _dump_inst),
+        (uuid.UUID, _dump_uuid),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
