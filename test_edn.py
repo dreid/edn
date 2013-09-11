@@ -30,6 +30,13 @@ foo
 bar
 baz\"""").string(), '\nfoo\nbar\nbaz')
 
+    def test_unicode(self):
+        # https://github.com/edn-format/edn/issues/59
+        snowman = u'\u2603'
+        encoded = snowman.encode('utf-8')
+        quoted = '"' + encoded + '"'
+        self.assertEqual(edn(quoted).string(), snowman)
+
     def test_character(self):
         self.assertEqual(edn(r"\c").character(), "c")
         self.assertEqual(edn(r"\newline").character(), "\n")
