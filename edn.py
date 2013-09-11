@@ -55,9 +55,10 @@ BUILTIN_READ_HANDLERS = {
 }
 
 
-def make_tagged_value(handlers, symbol, value):
-    default_handler = partial(TaggedValue, symbol)
-    handler = handlers.get(symbol, default_handler)
+def make_tagged_value(handlers, symbol, value, no_handler=TaggedValue):
+    handler = handlers.get(symbol, None)
+    if handler is None:
+        return no_handler(symbol, value)
     return handler(value)
 
 # XXX: There needs to be a character type and a string-that-escapes-newlines
@@ -96,9 +97,8 @@ edn = wrapGrammar(_unwrapped_edn)
 
 def loads(string, handlers=None):
     if handlers is None:
-        grammar = edn
-    else:
-        grammar = _make_edn_grammar(partial(make_tagged_value, handlers))
+        handlers = BUILTIN_READ_HANDLERS
+    grammar = _make_edn_grammar(partial(make_tagged_value, handlers))
     return grammar(string).edn()
 
 
