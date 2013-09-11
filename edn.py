@@ -35,6 +35,10 @@ class Vector(tuple):
 
 TaggedValue = namedtuple("TaggedValue", "tag value")
 
+
+DEFAULT_HANDLERS = {}
+
+
 def make_tagged_value(handlers, symbol, value):
     default_handler = partial(TaggedValue, symbol)
     handler = handlers.get(symbol, default_handler)
@@ -51,7 +55,7 @@ _unwrapped_edn = makeGrammar(
         'Symbol': Symbol,
         'Keyword': Keyword,
         'Vector': Vector,
-        'TaggedValue': TaggedValue,
+        'TaggedValue': partial(make_tagged_value, DEFAULT_HANDLERS),
     },
     name='edn',
     unwrap=True)
@@ -65,7 +69,9 @@ def _make_edn_grammar(tagged_value_handler):
     # expensive.  This hideous alternative seems to work.
     class _specialized_edn(_unwrapped_edn):
         pass
-    _specialized_edn.globals.update({'TaggedValue': tagged_value_handler})
+    globals = dict(_specialized_edn.globals)
+    globals.update({'TaggedValue': tagged_value_handler})
+    _specialized_edn.globals = globals
     return wrapGrammar(_specialized_edn)
 
 

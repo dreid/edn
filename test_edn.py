@@ -131,6 +131,13 @@ class LoadsTestCase(unittest.TestCase):
         parsed = loads(text, {Symbol('foo'): lambda x: list(reversed(x))})
         self.assertEqual([2, 1], parsed)
 
+    def test_custom_tag_doesnt_mutate(self):
+        foo = Symbol('foo')
+        text = '#foo [1 2]'
+        loads(text, {foo: lambda x: list(reversed(x))})
+        parsed = loads(text)
+        self.assertEqual(TaggedValue(foo, Vector([1, 2])), parsed)
+
 
 class DumpsTestCase(unittest.TestCase):
 
