@@ -225,9 +225,6 @@ def _format(tokens):
 # XXX: Pretty printer
 
 
-# FIXME: namedtuple gets caught but encoded badly.  Maybe change this to
-# equality of type, rather than subclass?
-
 # FIXME: dumps function is not extensible.
 #
 # Best way of extending I can think of is allow it to take a list of

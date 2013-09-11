@@ -1,3 +1,4 @@
+from collections import namedtuple
 import datetime
 import unittest
 import uuid
@@ -322,6 +323,15 @@ class DumpsTestCase(unittest.TestCase):
         uid = uuid.UUID("f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
         text = '#uuid "%s"' % (uid,)
         self.assertEqual(text, dumps(uid))
+
+    def test_arbitrary_namedtuple(self):
+        # Documenting a potentially unexpected behaviour.  Because dumps
+        # figures out how to write something based on type, namedtuples will
+        # be dumped as lists.  Since they are very often used for specific types,
+        # that might be surprising.
+        foo = namedtuple('foo', 'x y')
+        a = foo(1, 2)
+        self.assertEqual('(1 2)', dumps(a))
 
 
 if __name__ == '__main__':
