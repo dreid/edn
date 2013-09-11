@@ -41,6 +41,7 @@ TaggedValue = namedtuple("TaggedValue", "tag value")
 INST = Symbol('inst')
 
 
+# XXX: Probably spin this out to another separately-released module.
 _rfc_3339_definition = r"""
 year = <digit{4}>:Y -> int(Y)
 month = <digit{2}>:m -> int(m)
@@ -192,16 +193,6 @@ def _dump_tagged_value(obj):
     return map(dumps, [Symbol('#' + obj.tag.name), obj.value])
 
 
-# XXX: It'd be interesting to see how clojure does it, but I reckon that a map
-# of symbols to a read function and a write function is the best way to handle
-# tagged values.  The write function would return a known out-of-band value if
-# it is given a value that's not appropriate for it.
-#
-# Variants:
-# - two maps, one for parsing, one for dumping
-# - (optional?) is this a #foo? predicate included in dumping map
-
-
 # XXX: Not directly tested
 def _flatten(tokens):
     if isinstance(tokens, (list, tuple)):
@@ -227,13 +218,18 @@ def _format(tokens):
 # XXX: Pretty printer
 
 
-# XXX: Maybe a default handler for namedtuples?
+# FIXME: namedtuple gets caught but encoded badly.  Maybe change this to
+# equality of type, rather than subclass?
+
+# FIXME: dumps function is not extensible.
+#
+# Best way of extending I can think of is allow it to take a list of
+# functions, each of which can return either the correct value or a marker for
+# "I don't know" If no function knows, try using builtins.  If a function does
+# know, still use builtins to stringify.
+
 
 def dumps(obj):
-    # XXX: It occurs to me that the 'e' in 'edn' means that there should be a
-    # way to extend this.  Best way I've come up with is passing in a list of
-    # handlers that can each say "I don't know" and then using the first one
-    # that does, deferring to the builtins if none do. -- jml
     RULES = [
         (bool, _dump_bool),
         ((int, float), str),

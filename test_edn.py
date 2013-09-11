@@ -221,7 +221,8 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual('10000N', dumps(10000L))
 
     def test_float(self):
-        # At least I have some idea of how ignorant this makes me look.
+        # FIXME: At least I have some idea of how ignorant this makes me look.
+        # Figure out what's required to do this rigorously.
         self.assertEqual('0.3', dumps(0.3))
 
     def test_booleans(self):
