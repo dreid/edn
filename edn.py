@@ -1,7 +1,6 @@
 from collections import namedtuple
-from datetime import datetime
+import datetime
 from functools import partial
-import re
 
 from parsley import makeGrammar, wrapGrammar
 import pytz
@@ -27,11 +26,11 @@ class Keyword(namedtuple("Keyword", "name prefix type")):
         return super(Keyword, cls).__new__(cls, name, prefix, Keyword._MARKER)
 
 
-# XXX: jml is not convinced that it's best to decode vectors or lists to
-# tuples.  Sure that grants immutability, but it seems weird.  I'd much rather
-# a conversion to regular Python lists, or to some proper immutable linked
-# list / vector implementation.  The best thing would be to allow us to plug
-# in what we'd like these things to be decoded to, I guess.
+# XXX: I'm not convinced that it's best to decode vectors or lists to tuples.
+# Sure that grants immutability, but it seems weird.  I'd much rather a
+# conversion to regular Python lists, or to some proper immutable linked list
+# / vector implementation.  The best thing would be to allow us to plug in
+# what we'd like these things to be decoded to, I guess. -- jml
 class Vector(tuple):
     pass
 
@@ -42,29 +41,43 @@ TaggedValue = namedtuple("TaggedValue", "tag value")
 INST = Symbol('inst')
 
 
+_rfc_3339_definition = r"""
+year = <digit{4}>:Y -> int(Y)
+month = <digit{2}>:m -> int(m)
+day = <digit{2}>:d -> int(d)
+
+hour = <digit{2}>:H -> int(H)
+minute = <digit{2}>:M -> int(M)
+second = <digit{2}>:S -> int(S)
+fraction = '.' <digit+>:frac -> int(float('0.' + frac) * 10 ** 6)
+
+sign = ('-' -> -1) | ('+' -> 1)
+numeric_offset = sign:s hour:h ':' minute:m -> FixedOffset(s * (h * 60 + m))
+utc = 'Z' -> UTC
+offset = utc | numeric_offset
+
+naive_time = hour:h ':' minute:m ':' second:s (fraction | -> 0):ms
+             -> time(h, m, s, ms)
+time = naive_time:t offset:o -> t.replace(tzinfo=o)
+date = year:y '-' month:m '-' day:d -> date(y, m, d)
+
+datetime = date:d 'T' time:t -> datetime.combine(d, t)
+"""
+
+_rfc_3339_grammar = makeGrammar(
+    _rfc_3339_definition,
+    {
+        'FixedOffset': pytz.FixedOffset,
+        'date': datetime.date,
+        'time': datetime.time,
+        'datetime': datetime.datetime,
+        'UTC': pytz.UTC,
+    },
+    name='rfc3339',
+)
+
 def _make_inst(date_str):
-    # XXX: Oh, the irony.  Should probably do this with parsley.  -- jml
-    easy, hard = date_str.split('.')
-    instant = datetime.strptime(easy, '%Y-%m-%dT%H:%M:%S')
-    fractional_seconds = re.match(r'^(\d+)', hard).group(1)
-    microsecond = int(fractional_seconds) * 10 ** (6 - len(fractional_seconds))
-    timezone = hard[len(fractional_seconds):]
-    if timezone == 'Z':
-        tzinfo = pytz.UTC
-    else:
-        sign = timezone[0]
-        hours = timezone[1:3]
-        minutes = timezone[4:]
-        if sign == '+':
-            mult = 1
-        else:
-            mult = -1
-        total_minutes = mult * (int(hours) * 60 + int(minutes))
-        tzinfo = pytz.FixedOffset(total_minutes)
-    return instant.replace(
-        microsecond=microsecond,
-        tzinfo=tzinfo,
-    )
+    return _rfc_3339_grammar(date_str).datetime()
 
 
 BUILTIN_READ_HANDLERS = {
@@ -156,8 +169,7 @@ def _dump_dict(obj):
 
 
 def _dump_inst(obj):
-    return _dump_tagged_value(
-        TaggedValue(INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')))
+    return _dump_tagged_value(TaggedValue(INST, obj.isoformat()))
 
 
 def _dump_tagged_value(obj):
@@ -218,7 +230,7 @@ def dumps(obj):
         ((list, tuple), _dump_list),
         ((set, frozenset), _dump_set),
         (dict, _dump_dict),
-        (datetime, _dump_inst),
+        (datetime.datetime, _dump_inst),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):

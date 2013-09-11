@@ -11,6 +11,7 @@ from edn import (
     edn,
     loads,
     make_tagged_value,
+    _rfc_3339_grammar,
 )
 
 
@@ -117,6 +118,55 @@ class TaggedValueTestCase(unittest.TestCase):
         self.assertEqual(['r', 'a', 'b'], result)
 
 
+class TestDatetimeParsing(unittest.TestCase):
+
+    def test_date(self):
+        self.assertEqual(
+            datetime.date(2001, 12, 25),
+            _rfc_3339_grammar('2001-12-25').date())
+
+    def test_naive_time(self):
+        self.assertEqual(
+            datetime.time(13, 59, 43),
+            _rfc_3339_grammar('13:59:43').naive_time())
+
+    def test_fractional_naive_time(self):
+        self.assertEqual(
+            datetime.time(13, 59, 43, 880000),
+            _rfc_3339_grammar('13:59:43.88').naive_time())
+
+    def test_utc_time(self):
+        self.assertEqual(
+            datetime.time(13, 59, 43, tzinfo=pytz.UTC),
+            _rfc_3339_grammar('13:59:43Z').time())
+
+    def test_fractional_utc_time(self):
+        self.assertEqual(
+            datetime.time(13, 59, 43, 880000, tzinfo=pytz.UTC),
+            _rfc_3339_grammar('13:59:43.88Z').time())
+
+    def test_timezone_time(self):
+        self.assertEqual(
+            datetime.time(13, 59, 43, tzinfo=pytz.FixedOffset(60)),
+            _rfc_3339_grammar('13:59:43+01:00').time())
+
+    def test_fractional_timezone_time(self):
+        self.assertEqual(
+            datetime.time(13, 59, 43, 770000, tzinfo=pytz.FixedOffset(60)),
+            _rfc_3339_grammar('13:59:43.77+01:00').time())
+
+    def test_numeric_offset(self):
+        get_offset = lambda x: _rfc_3339_grammar(x).numeric_offset()
+        self.assertEqual(pytz.FixedOffset(0), get_offset('+00:00'))
+        self.assertEqual(pytz.FixedOffset(90), get_offset('+01:30'))
+        self.assertEqual(pytz.FixedOffset(-150), get_offset('-02:30'))
+
+    def test_datetime(self):
+        self.assertEqual(
+            datetime.datetime(2001, 12, 25, 13, 59, 43, 770000, tzinfo=pytz.UTC),
+            _rfc_3339_grammar('2001-12-25T13:59:43.77Z').datetime())
+
+
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
@@ -149,6 +199,13 @@ class LoadsTestCase(unittest.TestCase):
         self.assertEqual(
             datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
                               tzinfo=expected_tz),
+            parsed)
+
+    def test_inst_without_fractional(self):
+        text = '#inst "1985-04-12T23:20:50Z"'
+        parsed = loads(text)
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=pytz.UTC),
             parsed)
 
 
@@ -230,10 +287,13 @@ class DumpsTestCase(unittest.TestCase):
             set(['{:foo "bar" :baz "qux"}', '{:baz "qux" :foo "bar"}']))
 
     def test_datetime(self):
-        # XXX: Hardcoding the timezone is so awfully wrong, but I've got no
-        # net connection and no idea what rfc-3339-format does.
-        sometime = datetime.datetime(2012, 5, 12, 14, 30, 0)
-        self.assertEqual('#inst "2012-05-12T14:30.00Z"', dumps(sometime))
+        sometime = datetime.datetime(2012, 5, 12, 14, 30, 0, tzinfo=pytz.UTC)
+        self.assertEqual('#inst "2012-05-12T14:30:00+00:00"', dumps(sometime))
+
+    def test_datetime_with_tz(self):
+        sometime = datetime.datetime(
+            2012, 5, 12, 14, 30, 0, tzinfo=pytz.FixedOffset(60))
+        self.assertEqual('#inst "2012-05-12T14:30:00+01:00"', dumps(sometime))
 
     def test_tagged_value(self):
         self.assertEqual(
