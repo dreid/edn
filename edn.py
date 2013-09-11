@@ -189,17 +189,12 @@ def dumps(obj):
     # way to extend this.  Best way I've come up with is passing in a list of
     # handlers that can each say "I don't know" and then using the first one
     # that does, deferring to the builtins if none do. -- jml
-
-    # XXX: All in all, I think this provides a retort for dash's interesting
-    # but flippant remark that Lisp is for people who are afraid of parsers.
-    # It's only half true.  It's also for people who are afraid of printers.
-    # -- jml
     RULES = [
         (bool, _dump_bool),
-        ((int, float), lambda x: [str(x)]),
+        ((int, float), str),
         (long, lambda x: str(x) + 'N'),
         (str, _dump_str),
-        (type(None), lambda x: ['nil']),
+        (type(None), lambda x: 'nil'),
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
         (TaggedValue, _dump_tagged_value),
