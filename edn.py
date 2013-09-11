@@ -1,6 +1,7 @@
 from collections import namedtuple
 import datetime
 from functools import partial
+import uuid
 
 from parsley import makeGrammar, wrapGrammar
 import pytz
@@ -39,6 +40,7 @@ TaggedValue = namedtuple("TaggedValue", "tag value")
 
 
 INST = Symbol('inst')
+UUID = Symbol('uuid')
 
 
 # XXX: Probably spin this out to another separately-released module.
@@ -83,6 +85,7 @@ def _make_inst(date_str):
 
 BUILTIN_READ_HANDLERS = {
     INST: _make_inst,
+    UUID: uuid.UUID,
 }
 
 
