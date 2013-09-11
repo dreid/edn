@@ -58,7 +58,7 @@ _unwrapped_edn = makeGrammar(
 
 
 def _make_edn_grammar(tagged_value_handler):
-    # XXX: At last, my pact with the dark lord is complete!
+    # XXX: At last, my pact with the dark lord is fulfilled.
     #
     # I can't find any obvious way to specify bindings at the same time as
     # specifying input.  Making a new grammar for every set of handlers is
