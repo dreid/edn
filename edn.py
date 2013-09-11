@@ -87,14 +87,14 @@ def _dump_dict(obj):
     return ['{', [[dumps(k), dumps(v)] for k, v in obj.items()], '}']
 
 
-INST = Symbol('#inst')
+INST = Symbol('inst')
 def _dump_inst(obj):
     return _dump_tagged_value(
         TaggedValue(INST, obj.strftime('%Y-%m-%dT%H:%M.%SZ')))
 
 
 def _dump_tagged_value(obj):
-    return map(dumps, [obj.tag, obj.value])
+    return map(dumps, [Symbol('#' + obj.tag.name), obj.value])
 
 
 # XXX: It'd be interesting to see how clojure does it, but I reckon that a map
@@ -130,6 +130,7 @@ def _format(tokens):
         last_token = token
 
 # XXX: Pretty printer
+
 
 # XXX: Maybe a default handler for namedtuples?
 

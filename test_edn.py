@@ -189,7 +189,7 @@ class DumpsTestCase(unittest.TestCase):
     def test_tagged_value(self):
         self.assertEqual(
             '#foo bar',
-            dumps(TaggedValue(Symbol('#foo'), Symbol('bar'))))
+            dumps(TaggedValue(Symbol('foo'), Symbol('bar'))))
 
 
 if __name__ == '__main__':
