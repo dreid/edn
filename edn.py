@@ -2,7 +2,7 @@ from collections import namedtuple
 from datetime import datetime
 from functools import partial
 
-from parsley import makeGrammar
+from parsley import makeGrammar, wrapGrammar
 
 class Symbol(namedtuple("Symbol", "name prefix type")):
     _MARKER = object()
@@ -45,22 +45,31 @@ def make_tagged_value(handlers, symbol, value):
 
 _edn_grammar_definition = open('edn.parsley').read()
 
+_unwrapped_edn = makeGrammar(
+    _edn_grammar_definition,
+    {
+        'Symbol': Symbol,
+        'Keyword': Keyword,
+        'Vector': Vector,
+        'TaggedValue': TaggedValue,
+    },
+    name='edn',
+    unwrap=True)
+
 
 def _make_edn_grammar(tagged_value_handler):
-    # XXX: Creating a new grammar for every different binding set sucks.  Is
-    # there some way to do later binding with OMeta / parsley?  -- jml
-    return makeGrammar(
-        _edn_grammar_definition,
-        {
-            'Symbol': Symbol,
-            'Keyword': Keyword,
-            'Vector': Vector,
-            'TaggedValue': tagged_value_handler,
-        },
-        name='edn')
+    # XXX: At last, my pact with the dark lord is complete!
+    #
+    # I can't find any obvious way to specify bindings at the same time as
+    # specifying input.  Making a new grammar for every set of handlers is
+    # expensive.  This hideous alternative seems to work.
+    class _specialized_edn(_unwrapped_edn):
+        pass
+    _specialized_edn.globals.update({'TaggedValue': tagged_value_handler})
+    return wrapGrammar(_specialized_edn)
 
 
-edn = _make_edn_grammar(TaggedValue)
+edn = wrapGrammar(_unwrapped_edn)
 
 
 def loads(string, handlers=None):
