@@ -140,7 +140,23 @@ def _dump_bool(obj):
 
 
 def _dump_str(obj):
-    return '"%s"' % (repr(obj)[1:-1].replace('"', '\\"'),)
+    quote = '"'
+    escape = {
+        '"': r'\"',
+        '\\': r'\\',
+        '\n': r'\n',
+        '\r': r'\r',
+        '\t': r'\t',
+        '\b': r'\b',
+        '\f': r'\f',
+    }
+    output = [quote]
+    encoded = obj.encode('utf8')
+    for byte in encoded:
+        escaped = escape.get(byte, byte)
+        output.append(escaped)
+    output.append(quote)
+    return ''.join(output)
 
 
 def _dump_symbol(obj):
@@ -222,7 +238,7 @@ def dumps(obj):
         (bool, _dump_bool),
         ((int, float), str),
         (long, lambda x: str(x) + 'N'),
-        (str, _dump_str),
+        ((unicode, str), _dump_str),
         (type(None), lambda x: 'nil'),
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),

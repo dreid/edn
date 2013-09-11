@@ -228,10 +228,13 @@ class DumpsTestCase(unittest.TestCase):
         self.assertEqual('true', dumps(True))
         self.assertEqual('false', dumps(False))
 
-    # XXX: I wonder what edn does for unicode
-
     def test_simple_strings(self):
         self.assertEqual('"foo"', dumps('foo'))
+
+    def test_unicode(self):
+        snowman = u'\u2603'
+        encoded = snowman.encode('utf-8')
+        self.assertEqual('"' + encoded + '"', dumps(snowman))
 
     def test_newlines(self):
         # It doesn't have to be this way.  EDN allows literal newlines in
