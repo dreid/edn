@@ -1,7 +1,16 @@
 import datetime
 import unittest
 
-from edn import edn, dumps, loads, Symbol, Keyword, Vector, TaggedValue
+from edn import (
+    Keyword,
+    Symbol,
+    TaggedValue,
+    Vector,
+    dumps,
+    edn,
+    loads,
+    make_tagged_value,
+)
 
 
 
@@ -98,11 +107,29 @@ baz\"""").string(), '\nfoo\nbar\nbaz')
         self.assertEqual(edn('[1 2 #_foo 3]').edn(), Vector([1, 2, 3]))
 
 
+class TaggedValueTestCase(unittest.TestCase):
+
+    def test_default(self):
+        result = make_tagged_value({}, Symbol('foo'), 'bar')
+        self.assertEqual(TaggedValue(Symbol('foo'), 'bar'), result)
+
+    def test_custom(self):
+        result = make_tagged_value(
+            {Symbol('foo'): lambda x: list(reversed(x))},
+            Symbol('foo'), 'bar')
+        self.assertEqual(['r', 'a', 'b'], result)
+
+
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
         self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
         self.assertEqual({1: 2, 3: 4}, loads('{1 2, 3 4}'))
+
+    def test_custom_tag(self):
+        text = '#foo [1 2]'
+        parsed = loads(text, {Symbol('foo'): lambda x: list(reversed(x))})
+        self.assertEqual([2, 1], parsed)
 
 
 class DumpsTestCase(unittest.TestCase):

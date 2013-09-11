@@ -1,5 +1,6 @@
 from collections import namedtuple
 from datetime import datetime
+from functools import partial
 
 from parsley import makeGrammar
 
@@ -34,23 +35,40 @@ class Vector(tuple):
 
 TaggedValue = namedtuple("TaggedValue", "tag value")
 
+def make_tagged_value(handlers, symbol, value):
+    default_handler = partial(TaggedValue, symbol)
+    handler = handlers.get(symbol, default_handler)
+    return handler(value)
+
 # XXX: There needs to be a character type and a string-that-escapes-newlines
 # type in order to have full roundtripping.
 
 _edn_grammar_definition = open('edn.parsley').read()
 
-edn = makeGrammar(_edn_grammar_definition,
-                  {
-                    'Symbol': Symbol,
-                    'Keyword': Keyword,
-                    'Vector': Vector,
-                    'TaggedValue': TaggedValue
-                  },
-                  name='edn')
+
+def _make_edn_grammar(tagged_value_handler):
+    # XXX: Creating a new grammar for every different binding set sucks.  Is
+    # there some way to do later binding with OMeta / parsley?  -- jml
+    return makeGrammar(
+        _edn_grammar_definition,
+        {
+            'Symbol': Symbol,
+            'Keyword': Keyword,
+            'Vector': Vector,
+            'TaggedValue': tagged_value_handler,
+        },
+        name='edn')
 
 
-def loads(string):
-    return edn(string).edn()
+edn = _make_edn_grammar(TaggedValue)
+
+
+def loads(string, handlers=None):
+    if handlers is None:
+        grammar = edn
+    else:
+        grammar = _make_edn_grammar(partial(make_tagged_value, handlers))
+    return grammar(string).edn()
 
 
 def _dump_bool(obj):
