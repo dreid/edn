@@ -1,6 +1,8 @@
 import datetime
-import pytz
 import unittest
+import uuid
+
+import pytz
 
 from edn import (
     Keyword,
@@ -214,6 +216,11 @@ class LoadsTestCase(unittest.TestCase):
         self.assertEqual(
             datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=pytz.UTC),
             parsed)
+
+    def test_uuid(self):
+        uid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
+        text = '#uuid "%s"' % (uid,)
+        self.assertEqual(uuid.UUID(uid), loads(text))
 
 
 class DumpsTestCase(unittest.TestCase):
