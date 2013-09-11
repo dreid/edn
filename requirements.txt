@@ -1,1 +1,1 @@
-Parsley==1.1pre1
+Parsley>=1.1pre1
