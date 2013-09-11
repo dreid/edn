@@ -37,7 +37,9 @@ TaggedValue = namedtuple("TaggedValue", "tag value")
 # XXX: There needs to be a character type and a string-that-escapes-newlines
 # type in order to have full roundtripping.
 
-edn = makeGrammar(open('edn.parsley').read(),
+_edn_grammar_definition = open('edn.parsley').read()
+
+edn = makeGrammar(_edn_grammar_definition,
                   {
                     'Symbol': Symbol,
                     'Keyword': Keyword,
