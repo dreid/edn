@@ -1,4 +1,5 @@
 import datetime
+import pytz
 import unittest
 
 from edn import (
@@ -138,7 +139,17 @@ class LoadsTestCase(unittest.TestCase):
         text = '#inst "1985-04-12T23:20:50.52Z"'
         parsed = loads(text)
         self.assertEqual(
-            datetime.datetime(1985, 4, 12, 23, 20, 50, 520000), parsed)
+            datetime.datetime(
+                1985, 4, 12, 23, 20, 50, 520000, tzinfo=pytz.UTC), parsed)
+
+    def test_inst_with_tz(self):
+        text = '#inst "1985-04-12T23:20:50.52-05:30"'
+        parsed = loads(text)
+        expected_tz = pytz.FixedOffset(-5 * 60 - 30)
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
+                              tzinfo=expected_tz),
+            parsed)
 
 
 class DumpsTestCase(unittest.TestCase):

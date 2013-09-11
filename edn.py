@@ -4,6 +4,8 @@ from functools import partial
 import re
 
 from parsley import makeGrammar, wrapGrammar
+import pytz
+
 
 class Symbol(namedtuple("Symbol", "name prefix type")):
     _MARKER = object()
@@ -41,13 +43,28 @@ INST = Symbol('inst')
 
 
 def _make_inst(date_str):
-    # XXX: What's a timezone?
     # XXX: Oh, the irony.  Should probably do this with parsley.  -- jml
     easy, hard = date_str.split('.')
     instant = datetime.strptime(easy, '%Y-%m-%dT%H:%M:%S')
     fractional_seconds = re.match(r'^(\d+)', hard).group(1)
     microsecond = int(fractional_seconds) * 10 ** (6 - len(fractional_seconds))
-    return instant.replace(microsecond=microsecond)
+    timezone = hard[len(fractional_seconds):]
+    if timezone == 'Z':
+        tzinfo = pytz.UTC
+    else:
+        sign = timezone[0]
+        hours = timezone[1:3]
+        minutes = timezone[4:]
+        if sign == '+':
+            mult = 1
+        else:
+            mult = -1
+        total_minutes = mult * (int(hours) * 60 + int(minutes))
+        tzinfo = pytz.FixedOffset(total_minutes)
+    return instant.replace(
+        microsecond=microsecond,
+        tzinfo=tzinfo,
+    )
 
 
 BUILTIN_READ_HANDLERS = {
