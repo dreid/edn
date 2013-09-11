@@ -188,14 +188,6 @@ def _dump_dict(obj):
     return ['{', [[dumps(k), dumps(v)] for k, v in obj.items()], '}']
 
 
-def _dump_inst(obj):
-    return _dump_tagged_value(TaggedValue(INST, obj.isoformat()))
-
-
-def _dump_uuid(obj):
-    return _dump_tagged_value(TaggedValue(UUID, str(obj)))
-
-
 def _dump_tagged_value(obj):
     return map(dumps, [Symbol('#' + obj.tag.name), obj.value])
 
@@ -225,15 +217,35 @@ def _format(tokens):
 # XXX: Pretty printer
 
 
-# FIXME: dumps function is not extensible.
-#
-# Best way of extending I can think of is allow it to take a list of
-# functions, each of which can return either the correct value or a marker for
-# "I don't know" If no function knows, try using builtins.  If a function does
-# know, still use builtins to stringify.
+# XXX: This is a poor way of doing type-based dispatch.  Some thoughts:
+# - are we sure that we _always_ want to do type-based dispatch?  the
+#   most flexible way to do this is to have arbritrary predicates, or
+#   a list of functions that return some marker value if they don't
+#   know what to do
+# - clojure does typed-based dispatch, but it has multimethods
+# - if we did type-based dispatch, we could use Python's ABC, I guess.
+# - does it make sense to allow callers to override the behaviour of
+#   the standard types, e.g. to encode bools differently
+# - does it even make sense to allow callers to overwrite the
+#   built-in write handlers?  the current API requires you specify them.
+# - perhaps a global registry wouldn't be such a bad thing?
 
 
-def dumps(obj):
+DEFAULT_WRITE_HANDLERS = [
+    (INST, datetime.datetime, lambda x: x.isoformat()),
+    (UUID, uuid.UUID, str),
+]
+
+
+def dumps(obj, write_handlers=None):
+    if write_handlers is None:
+        write_handlers = DEFAULT_WRITE_HANDLERS
+
+    for symbol, base_type, function in write_handlers:
+        if isinstance(obj, base_type):
+            obj = TaggedValue(symbol, function(obj))
+            break
+
     RULES = [
         (bool, _dump_bool),
         ((int, float), str),
@@ -246,8 +258,6 @@ def dumps(obj):
         ((list, tuple), _dump_list),
         ((set, frozenset), _dump_set),
         (dict, _dump_dict),
-        (datetime.datetime, _dump_inst),
-        (uuid.UUID, _dump_uuid),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
