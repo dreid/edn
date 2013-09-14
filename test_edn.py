@@ -1,6 +1,6 @@
 import unittest
 
-from edn import edn, Symbol, Keyword, Vector, TaggedValue
+from edn import edn, loads, Symbol, Keyword, Vector, TaggedValue
 
 
 
@@ -99,6 +99,13 @@ baz\"""").string(), '\nfoo\nbar\nbaz')
 
     def test_discard(self):
         self.assertEqual(edn('[1 2 #_foo 3]').edn(), Vector([1, 2, 3]))
+
+
+class LoadsTestCase(unittest.TestCase):
+
+    def test_structure(self):
+        self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
+        self.assertEqual({1: 2, 3: 4}, loads('{1 2, 3 4}'))
 
 
 if __name__ == '__main__':

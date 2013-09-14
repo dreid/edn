@@ -36,3 +36,7 @@ edn = makeGrammar(open('edn.parsley').read(),
                     'TaggedValue': TaggedValue
                   },
                   name='edn')
+
+
+def loads(string):
+    return edn(string).edn()
