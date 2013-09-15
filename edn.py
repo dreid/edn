@@ -27,11 +27,6 @@ class Keyword(namedtuple("Keyword", "name prefix type")):
         return super(Keyword, cls).__new__(cls, name, prefix, Keyword._MARKER)
 
 
-# XXX: I'm not convinced that it's best to decode vectors or lists to tuples.
-# Sure that grants immutability, but it seems weird.  I'd much rather a
-# conversion to regular Python lists, or to some proper immutable linked list
-# / vector implementation.  The best thing would be to allow us to plug in
-# what we'd like these things to be decoded to, I guess. -- jml
 class Vector(tuple):
     pass
 
@@ -203,7 +198,6 @@ def _flatten(tokens):
 
 
 # XXX: Not directly tested
-# XXX: Doesn't do commas between dict entries
 def _format(tokens):
     last_token = None
     open_brackets = frozenset(['{', '#{', '(', '[', None])
