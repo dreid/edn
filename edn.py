@@ -4,7 +4,7 @@ from functools import partial
 import uuid
 
 from parsley import makeGrammar, wrapGrammar
-import pytz
+import iso8601
 
 
 class Symbol(namedtuple("Symbol", "name prefix type")):
@@ -38,48 +38,8 @@ INST = Symbol('inst')
 UUID = Symbol('uuid')
 
 
-# XXX: Probably spin this out to another separately-released module.
-_rfc_3339_definition = r"""
-year = <digit{4}>:Y -> int(Y)
-month = <digit{2}>:m -> int(m)
-day = <digit{2}>:d -> int(d)
-
-hour = <digit{2}>:H -> int(H)
-minute = <digit{2}>:M -> int(M)
-second = <digit{2}>:S -> int(S)
-fraction = '.' <digit+>:frac -> int(float('0.' + frac) * 10 ** 6)
-
-sign = ('-' -> -1) | ('+' -> 1)
-numeric_offset = sign:s hour:h ':' minute:m -> FixedOffset(s * (h * 60 + m))
-utc = 'Z' -> UTC
-offset = utc | numeric_offset
-
-naive_time = hour:h ':' minute:m ':' second:s (fraction | -> 0):ms
-             -> time(h, m, s, ms)
-time = naive_time:t offset:o -> t.replace(tzinfo=o)
-date = year:y '-' month:m '-' day:d -> date(y, m, d)
-
-datetime = date:d 'T' time:t -> datetime.combine(d, t)
-"""
-
-_rfc_3339_grammar = makeGrammar(
-    _rfc_3339_definition,
-    {
-        'FixedOffset': pytz.FixedOffset,
-        'date': datetime.date,
-        'time': datetime.time,
-        'datetime': datetime.datetime,
-        'UTC': pytz.UTC,
-    },
-    name='rfc3339',
-)
-
-def _make_inst(date_str):
-    return _rfc_3339_grammar(date_str).datetime()
-
-
 BUILTIN_READ_HANDLERS = {
-    INST: _make_inst,
+    INST: iso8601.parse_date,
     UUID: uuid.UUID,
 }
 
