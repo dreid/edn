@@ -16,8 +16,6 @@ from edn import (
     make_tagged_value,
 )
 
-from edn._edn import _rfc_3339_grammar
-
 
 class EDNTestCase(unittest.TestCase):
     def test_nil(self):
