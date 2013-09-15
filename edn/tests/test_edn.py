@@ -14,8 +14,9 @@ from edn import (
     edn,
     loads,
     make_tagged_value,
-    _rfc_3339_grammar,
 )
+
+from edn._edn import _rfc_3339_grammar
 
 
 class EDNTestCase(unittest.TestCase):
