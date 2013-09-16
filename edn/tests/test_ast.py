@@ -133,8 +133,7 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
         self.assertEqual(edn('[1 2 #_foo 3]').edn(), Vector([1, 2, 3]))
 
 
-class ParseTestCase(object):
-    # DISABLED for the moment
+class ParseTestCase(unittest.TestCase):
 
     def test_structure(self):
         self.assertEqual(Set([1,2,3]), parse('#{1 2 3}'))
