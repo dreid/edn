@@ -6,6 +6,7 @@ import uuid
 import pytz
 
 from edn import (
+    DEFAULT_WRITE_HANDLERS,
     Keyword,
     Symbol,
     TaggedValue,
@@ -282,6 +283,18 @@ class DumpsTestCase(unittest.TestCase):
         foo = namedtuple('foo', 'x y')
         a = foo(1, 2)
         self.assertEqual('(1 2)', dumps(a))
+
+    def test_custom_handler(self):
+        foo = namedtuple('foo', 'x y')
+        handler = lambda x: TaggedValue(Symbol('foo'), (x.x, x.y))
+        handlers = DEFAULT_WRITE_HANDLERS + [(foo, handler)]
+        self.assertEqual('#foo (2 3)', dumps(foo(2, 3), handlers))
+
+    def test_nested_custom_handler(self):
+        foo = namedtuple('foo', 'x y')
+        handler = lambda x: TaggedValue(Symbol('foo'), (x.x, x.y))
+        handlers = DEFAULT_WRITE_HANDLERS + [(foo, handler)]
+        self.assertEqual('(#foo (2 3))', dumps([foo(2, 3)], handlers))
 
 
 if __name__ == '__main__':

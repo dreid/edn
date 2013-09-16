@@ -9,4 +9,6 @@ from ._edn import (
     edn,
     loads,
     make_tagged_value,
+    DEFAULT_WRITE_HANDLERS,
+    tagger,
 )

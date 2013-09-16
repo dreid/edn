@@ -132,17 +132,18 @@ def _dump_keyword(obj):
     return ':' + obj.name
 
 
-def _dump_list(obj):
-    return ['(', map(dumps, obj), ')']
+def _dump_list(xs, write_handlers=None):
+    return ['(', [dumps(x, write_handlers) for x in xs], ')']
 
 
-def _dump_set(obj):
-    return ['#{', map(dumps, obj), '}']
+def _dump_set(xs, write_handlers=None):
+    return ['#{', [dumps(x, write_handlers) for x in xs], '}']
 
 
-def _dump_dict(obj):
+def _dump_dict(obj, write_handlers=None):
     # XXX: Comma is optional.  Should there be an option?
-    return ['{', [[dumps(k), dumps(v)] for k, v in obj.items()], '}']
+    return ['{', [[dumps(k, write_handlers), dumps(v, write_handlers)]
+                  for k, v in obj.items()], '}']
 
 
 def _dump_tagged_value(obj):
@@ -187,9 +188,15 @@ def _format(tokens):
 # - perhaps a global registry wouldn't be such a bad thing?
 
 
+def tagger(tag, function):
+    def wrapped(*args, **kwargs):
+        return TaggedValue(tag, function(*args, **kwargs))
+    return wrapped
+
+
 DEFAULT_WRITE_HANDLERS = [
-    (INST, datetime.datetime, lambda x: x.isoformat()),
-    (UUID, uuid.UUID, str),
+    (datetime.datetime, tagger(INST, lambda x: x.isoformat())),
+    (uuid.UUID, tagger(UUID, str)),
 ]
 
 
@@ -197,9 +204,9 @@ def dumps(obj, write_handlers=None):
     if write_handlers is None:
         write_handlers = DEFAULT_WRITE_HANDLERS
 
-    for symbol, base_type, function in write_handlers:
+    for base_type, function in write_handlers:
         if isinstance(obj, base_type):
-            obj = TaggedValue(symbol, function(obj))
+            obj = function(obj)
             break
 
     RULES = [
@@ -211,9 +218,9 @@ def dumps(obj, write_handlers=None):
         (Keyword, _dump_keyword),
         (Symbol, _dump_symbol),
         (TaggedValue, _dump_tagged_value),
-        ((list, tuple), _dump_list),
-        ((set, frozenset), _dump_set),
-        (dict, _dump_dict),
+        ((list, tuple), lambda x: _dump_list(x, write_handlers)),
+        ((set, frozenset), lambda x: _dump_set(x, write_handlers)),
+        (dict, lambda x: _dump_dict(x, write_handlers)),
     ]
     for base_type, dump_rule in RULES:
         if isinstance(obj, base_type):
