@@ -7,6 +7,7 @@ from parsley import makeGrammar
 from terml.nodes import termMaker as t
 
 
+Character = t.Character
 Keyword = t.Keyword
 List = t.List
 Map = t.Map
@@ -27,15 +28,13 @@ BUILTIN_READ_HANDLERS = {
 }
 
 
-# XXX: There needs to be a character type and a string-that-escapes-newlines
-# type in order to have full roundtripping.
-
 _edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
 _edn_grammar_definition = open(_edn_grammar_file).read()
 
 edn = makeGrammar(
     _edn_grammar_definition,
     {
+        'Character': Character,
         'String': String,
         'Symbol': Symbol,
         'Keyword': Keyword,

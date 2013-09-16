@@ -114,7 +114,8 @@ character = '\\' ('"' -> '"'
                  |letter
                  |digit
                  |punctuation
-                 | '(' | ')' | '{' | '}' | '[' | ']' | '=' | '~')
+                 | '(' | ')' | '{' | '}' | '[' | ']' | '=' | '~'):c
+            -> Character(c)
 
 # ### symbols
 #

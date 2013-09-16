@@ -7,6 +7,7 @@ import iso8601
 from perfidy import frozendict
 
 from edn import (
+    Character,
     DEFAULT_WRITE_HANDLERS,
     List,
     Keyword,
@@ -45,11 +46,11 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
         self.assertEqual(edn(quoted).string(), String(snowman))
 
     def test_character(self):
-        self.assertEqual(edn(r"\c").character(), "c")
-        self.assertEqual(edn(r"\newline").character(), "\n")
-        self.assertEqual(edn(r"\tab").character(), "\t")
-        self.assertEqual(edn(r"\return").character(), "\r")
-        self.assertEqual(edn(r"\space").character(), " ")
+        self.assertEqual(edn(r"\c").character(), Character("c"))
+        self.assertEqual(edn(r"\newline").character(), Character("\n"))
+        self.assertEqual(edn(r"\tab").character(), Character("\t"))
+        self.assertEqual(edn(r"\return").character(), Character("\r"))
+        self.assertEqual(edn(r"\space").character(), Character(" "))
 
     def test_symbol(self):
         self.assertEqual(edn("foo").symbol(), Symbol("foo"))

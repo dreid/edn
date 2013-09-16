@@ -1,6 +1,7 @@
 from ._edn import (
     DEFAULT_WRITE_HANDLERS,
     INST,
+    Character,
     Keyword,
     List,
     Map,
