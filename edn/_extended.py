@@ -11,6 +11,21 @@ from ._ast import (
 )
 
 
+# TODO(jml):
+# - write code that turns AST into Python objects
+#   - perfidious ones
+#   - regular ones
+#   [probably parametrize with some term -> constructor map]
+# - write code that turns Python objects into AST
+# - probably put the top level of convenience (dumps/loads) in
+#   yet another module
+
+# TODO(jml)
+#
+# Almost 100% of the extension is going to be turning a domain-specific object
+# into a tagged value and back.  Make sure there's a good API for that.
+
+
 INST = Symbol('inst')
 UUID = Symbol('uuid')
 
