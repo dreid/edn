@@ -1,7 +1,20 @@
+from collections import namedtuple
+import datetime
 import unittest
+import uuid
 
-from edn import edn, loads, Symbol, Keyword, Vector, TaggedValue
+import pytz
 
+from edn import (
+    Keyword,
+    Symbol,
+    TaggedValue,
+    Vector,
+    dumps,
+    edn,
+    loads,
+    make_tagged_value,
+)
 
 
 class EDNTestCase(unittest.TestCase):
@@ -101,11 +114,174 @@ baz\"""").string(), '\nfoo\nbar\nbaz')
         self.assertEqual(edn('[1 2 #_foo 3]').edn(), Vector([1, 2, 3]))
 
 
+class TaggedValueTestCase(unittest.TestCase):
+
+    def test_default(self):
+        result = make_tagged_value({}, Symbol('foo'), 'bar')
+        self.assertEqual(TaggedValue(Symbol('foo'), 'bar'), result)
+
+    def test_custom(self):
+        result = make_tagged_value(
+            {Symbol('foo'): lambda x: list(reversed(x))},
+            Symbol('foo'), 'bar')
+        self.assertEqual(['r', 'a', 'b'], result)
+
+
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
         self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
         self.assertEqual({1: 2, 3: 4}, loads('{1 2, 3 4}'))
+
+    def test_custom_tag(self):
+        text = '#foo [1 2]'
+        parsed = loads(text, {Symbol('foo'): lambda x: list(reversed(x))})
+        self.assertEqual([2, 1], parsed)
+
+    def test_custom_tag_doesnt_mutate(self):
+        foo = Symbol('foo')
+        text = '#foo [1 2]'
+        loads(text, {foo: lambda x: list(reversed(x))})
+        parsed = loads(text)
+        self.assertEqual(TaggedValue(foo, Vector([1, 2])), parsed)
+
+    def test_inst(self):
+        text = '#inst "1985-04-12T23:20:50.52Z"'
+        parsed = loads(text)
+        self.assertEqual(
+            datetime.datetime(
+                1985, 4, 12, 23, 20, 50, 520000, tzinfo=pytz.UTC), parsed)
+
+    def test_inst_with_tz(self):
+        text = '#inst "1985-04-12T23:20:50.52-05:30"'
+        parsed = loads(text)
+        expected_tz = pytz.FixedOffset(-5 * 60 - 30)
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
+                              tzinfo=expected_tz),
+            parsed)
+
+    def test_inst_without_fractional(self):
+        text = '#inst "1985-04-12T23:20:50Z"'
+        parsed = loads(text)
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=pytz.UTC),
+            parsed)
+
+    def test_uuid(self):
+        uid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
+        text = '#uuid "%s"' % (uid,)
+        self.assertEqual(uuid.UUID(uid), loads(text))
+
+
+class DumpsTestCase(unittest.TestCase):
+
+    def test_nil(self):
+        self.assertEqual('nil', dumps(None))
+
+    def test_integer(self):
+        self.assertEqual('1', dumps(1))
+
+    def test_long(self):
+        self.assertEqual('10000N', dumps(10000L))
+
+    def test_float(self):
+        # FIXME: At least I have some idea of how ignorant this makes me look.
+        # Figure out what's required to do this rigorously.
+        self.assertEqual('0.3', dumps(0.3))
+
+    def test_booleans(self):
+        self.assertEqual('true', dumps(True))
+        self.assertEqual('false', dumps(False))
+
+    def test_simple_strings(self):
+        self.assertEqual('"foo"', dumps('foo'))
+
+    def test_unicode(self):
+        snowman = u'\u2603'
+        encoded = snowman.encode('utf-8')
+        self.assertEqual('"' + encoded + '"', dumps(snowman))
+
+    def test_newlines(self):
+        # It doesn't have to be this way.  EDN allows literal newlines in
+        # strings, but the equality definition says that 'foo\nbar' is not
+        # equal to 'foo
+        # bar'.  Thus, it's equally valid to not escape the newline but to
+        # instead insert a literal space.  This is possibly a bug in the
+        # spec.
+        self.assertEqual('"foo\\nbar"', dumps('foo\nbar'))
+
+    def test_escaping(self):
+        self.assertEqual('"foo\\rbar"', dumps('foo\rbar'))
+        self.assertEqual(r'"foo\\bar"', dumps(r'foo\bar'))
+        self.assertEqual('"foo\\"bar"', dumps('foo"bar'))
+
+    def test_character(self):
+        # XXX: No character support yet.  Need a type for it or something.
+        self.assertEqual('"a"', dumps('a'))
+
+    def test_symbol(self):
+        self.assertEqual("foo", dumps(Symbol("foo")))
+        self.assertEqual(".foo", dumps(Symbol(".foo")))
+        self.assertEqual("/", dumps(Symbol("/")))
+        self.assertEqual("foo/bar", dumps(Symbol("bar", "foo")))
+
+    def test_keyword(self):
+        self.assertEqual(":foo", dumps(Keyword("foo")))
+        self.assertEqual(":my/foo", dumps(Keyword("foo", "my")))
+
+    def test_tuple(self):
+        self.assertEqual("()", dumps(()))
+        self.assertEqual("(() ())", dumps(((), ())))
+        self.assertEqual("(a)", dumps((Symbol('a'),)))
+
+    def test_list(self):
+        self.assertEqual("()", dumps([]))
+        self.assertEqual("(() ())", dumps([[], []]))
+        self.assertEqual("(a)", dumps([Symbol('a')]))
+
+    def test_set(self):
+        self.assertEqual("#{}", dumps(frozenset()))
+        self.assertIn(
+            dumps(set([1, 2, 3])),
+            set(["#{1 2 3}", "#{1 3 2}",
+                 "#{2 1 3}", "#{2 3 1}",
+                 "#{3 1 2}", "#{3 2 1}"]))
+
+    def test_dict(self):
+        self.assertEqual("{}", dumps({}))
+        self.assertEqual('{:foo "bar"}', dumps({Keyword('foo'): 'bar'}))
+        self.assertIn(
+            dumps({Keyword('foo'): 'bar', Keyword('baz'): 'qux'}),
+            set(['{:foo "bar" :baz "qux"}', '{:baz "qux" :foo "bar"}']))
+
+    def test_datetime(self):
+        sometime = datetime.datetime(2012, 5, 12, 14, 30, 0, tzinfo=pytz.UTC)
+        self.assertEqual('#inst "2012-05-12T14:30:00+00:00"', dumps(sometime))
+
+    def test_datetime_with_tz(self):
+        sometime = datetime.datetime(
+            2012, 5, 12, 14, 30, 0, tzinfo=pytz.FixedOffset(60))
+        self.assertEqual('#inst "2012-05-12T14:30:00+01:00"', dumps(sometime))
+
+    def test_tagged_value(self):
+        self.assertEqual(
+            '#foo bar',
+            dumps(TaggedValue(Symbol('foo'), Symbol('bar'))))
+
+    def test_uuid(self):
+        uid = uuid.UUID("f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
+        text = '#uuid "%s"' % (uid,)
+        self.assertEqual(text, dumps(uid))
+
+    def test_arbitrary_namedtuple(self):
+        # Documenting a potentially unexpected behaviour.  Because dumps
+        # figures out how to write something based on type, namedtuples will
+        # be dumped as lists.  Since they are very often used for specific types,
+        # that might be surprising.
+        foo = namedtuple('foo', 'x y')
+        a = foo(1, 2)
+        self.assertEqual('(1 2)', dumps(a))
 
 
 if __name__ == '__main__':
