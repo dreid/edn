@@ -1,43 +1,23 @@
-from collections import namedtuple
 import datetime
-from functools import partial
 import os
 import uuid
 
 import iso8601
-from parsley import makeGrammar, wrapGrammar
-from perfidy import frozendict
+from parsley import makeGrammar
+from terml.nodes import termMaker as t
 
 
-class Symbol(namedtuple("Symbol", "name prefix type")):
-    _MARKER = object()
-
-    def __new__(cls, name, prefix=None):
-        return super(Symbol, cls).__new__(cls, name, prefix, Symbol._MARKER)
-
-
-class Keyword(namedtuple("Keyword", "name prefix type")):
-    _MARKER = object()
-
-    def __new__(cls, name_or_symbol, prefix=None):
-        name = name_or_symbol
-
-        if isinstance(name_or_symbol, Symbol):
-            name = name_or_symbol.name
-            prefix = name_or_symbol.prefix
-
-        return super(Keyword, cls).__new__(cls, name, prefix, Keyword._MARKER)
+Keyword = t.Keyword
+List = t.List
+Map = t.Map
+Set = t.Set
+Symbol = t.Symbol
+TaggedValue = t.TaggedValue
+Vector = t.Vector
 
 
-class Vector(tuple):
-    pass
-
-
-TaggedValue = namedtuple("TaggedValue", "tag value")
-
-
-INST = Symbol('inst')
-UUID = Symbol('uuid')
+INST = t.Symbol('inst')
+UUID = t.Symbol('uuid')
 
 
 BUILTIN_READ_HANDLERS = {
@@ -46,53 +26,30 @@ BUILTIN_READ_HANDLERS = {
 }
 
 
-def make_tagged_value(handlers, symbol, value, no_handler=TaggedValue):
-    handler = handlers.get(symbol, None)
-    if handler is None:
-        return no_handler(symbol, value)
-    return handler(value)
-
 # XXX: There needs to be a character type and a string-that-escapes-newlines
 # type in order to have full roundtripping.
 
 _edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
 _edn_grammar_definition = open(_edn_grammar_file).read()
 
-_unwrapped_edn = makeGrammar(
+edn = makeGrammar(
     _edn_grammar_definition,
     {
         'Symbol': Symbol,
         'Keyword': Keyword,
         'Vector': Vector,
-        'TaggedValue': partial(make_tagged_value, BUILTIN_READ_HANDLERS),
-        'frozendict': frozendict,
+        'TaggedValue': TaggedValue,
+        'Map': Map,
+        'Set': Set,
+        'List': List,
     },
-    name='edn',
-    unwrap=True)
-
-
-def _make_edn_grammar(tagged_value_handler):
-    # XXX: At last, my pact with the dark lord is fulfilled.
-    #
-    # I can't find any obvious way to specify bindings at the same time as
-    # specifying input.  Making a new grammar for every set of handlers is
-    # expensive.  This hideous alternative seems to work.
-    class _specialized_edn(_unwrapped_edn):
-        pass
-    globals = dict(_specialized_edn.globals)
-    globals.update({'TaggedValue': tagged_value_handler})
-    _specialized_edn.globals = globals
-    return wrapGrammar(_specialized_edn)
-
-
-edn = wrapGrammar(_unwrapped_edn)
+    name='edn')
 
 
 def loads(string, handlers=None):
     if handlers is None:
         handlers = BUILTIN_READ_HANDLERS
-    grammar = _make_edn_grammar(partial(make_tagged_value, handlers))
-    return grammar(string).edn()
+    return edn(string).edn()
 
 
 def _dump_bool(obj):
@@ -149,7 +106,7 @@ def _dump_dict(obj, write_handlers=None):
 
 
 def _dump_tagged_value(obj):
-    return map(dumps, [Symbol('#' + obj.tag.name), obj.value])
+    return map(dumps, [t.Symbol('#' + obj.tag.name), obj.value])
 
 
 # XXX: Not directly tested
@@ -192,7 +149,7 @@ def _format(tokens):
 
 def tagger(tag, function):
     def wrapped(*args, **kwargs):
-        return TaggedValue(tag, function(*args, **kwargs))
+        return t.TaggedValue(tag, function(*args, **kwargs))
     return wrapped
 
 
@@ -217,9 +174,9 @@ def dumps(obj, write_handlers=None):
         (long, lambda x: str(x) + 'N'),
         ((unicode, str), _dump_str),
         (type(None), lambda x: 'nil'),
-        (Keyword, _dump_keyword),
-        (Symbol, _dump_symbol),
-        (TaggedValue, _dump_tagged_value),
+        (t.Keyword, _dump_keyword),
+        (t.Symbol, _dump_symbol),
+        (t.TaggedValue, _dump_tagged_value),
         ((list, tuple), lambda x: _dump_list(x, write_handlers)),
         ((set, frozenset), lambda x: _dump_set(x, write_handlers)),
         (dict, lambda x: _dump_dict(x, write_handlers)),
