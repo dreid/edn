@@ -3,7 +3,7 @@ import datetime
 import unittest
 import uuid
 
-import pytz
+import iso8601
 
 from edn import (
     DEFAULT_WRITE_HANDLERS,
@@ -151,12 +151,12 @@ class LoadsTestCase(unittest.TestCase):
         parsed = loads(text)
         self.assertEqual(
             datetime.datetime(
-                1985, 4, 12, 23, 20, 50, 520000, tzinfo=pytz.UTC), parsed)
+                1985, 4, 12, 23, 20, 50, 520000, tzinfo=iso8601.iso8601.UTC), parsed)
 
     def test_inst_with_tz(self):
         text = '#inst "1985-04-12T23:20:50.52-05:30"'
         parsed = loads(text)
-        expected_tz = pytz.FixedOffset(-5 * 60 - 30)
+        expected_tz = iso8601.iso8601.FixedOffset(-5, -30, '-05:30')
         self.assertEqual(
             datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
                               tzinfo=expected_tz),
@@ -166,7 +166,7 @@ class LoadsTestCase(unittest.TestCase):
         text = '#inst "1985-04-12T23:20:50Z"'
         parsed = loads(text)
         self.assertEqual(
-            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=pytz.UTC),
+            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
             parsed)
 
     def test_uuid(self):
@@ -257,12 +257,13 @@ class DumpsTestCase(unittest.TestCase):
             set(['{:foo "bar" :baz "qux"}', '{:baz "qux" :foo "bar"}']))
 
     def test_datetime(self):
-        sometime = datetime.datetime(2012, 5, 12, 14, 30, 0, tzinfo=pytz.UTC)
+        sometime = datetime.datetime(
+            2012, 5, 12, 14, 30, 0, tzinfo=iso8601.iso8601.UTC)
         self.assertEqual('#inst "2012-05-12T14:30:00+00:00"', dumps(sometime))
 
     def test_datetime_with_tz(self):
-        sometime = datetime.datetime(
-            2012, 5, 12, 14, 30, 0, tzinfo=pytz.FixedOffset(60))
+        tz = iso8601.iso8601.FixedOffset(1, 0, '+01:00')
+        sometime = datetime.datetime(2012, 5, 12, 14, 30, 0, tzinfo=tz)
         self.assertEqual('#inst "2012-05-12T14:30:00+01:00"', dumps(sometime))
 
     def test_tagged_value(self):
