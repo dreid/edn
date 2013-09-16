@@ -1,6 +1,4 @@
 from ._ast import (
-    DEFAULT_WRITE_HANDLERS,
-    INST,
     Character,
     Keyword,
     List,
@@ -9,12 +7,16 @@ from ._ast import (
     String,
     Symbol,
     TaggedValue,
-    UUID,
     Vector,
-    dumps,
     edn,
-    loads,
     unparse,
-    tagger,
     parse,
+)
+from ._extended import (
+    DEFAULT_WRITE_HANDLERS,
+    INST,
+    UUID,
+    dumps,
+    loads,
+    tagger,
 )
