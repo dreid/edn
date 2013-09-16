@@ -9,5 +9,6 @@ setup(
     install_requires=[
         'iso8601',
         'parsley>=1.1pre1',
+        'perfidy',
     ],
 )

@@ -238,7 +238,7 @@ vector = '[' elem*:elems ']' -> Vector(elems)
 
 pair = datum:k consumable datum:v -> (k, v)
 members = (pair:first (consumable pair)*:rest -> [first] + rest) | -> []
-map = '{' consumable members:m consumable '}' -> dict(m)
+map = '{' consumable members:m consumable '}' -> frozendict(m)
 
 # ### sets
 #

@@ -4,8 +4,9 @@ from functools import partial
 import os
 import uuid
 
-from parsley import makeGrammar, wrapGrammar
 import iso8601
+from parsley import makeGrammar, wrapGrammar
+from perfidy import frozendict
 
 
 class Symbol(namedtuple("Symbol", "name prefix type")):
@@ -64,6 +65,7 @@ _unwrapped_edn = makeGrammar(
         'Keyword': Keyword,
         'Vector': Vector,
         'TaggedValue': partial(make_tagged_value, BUILTIN_READ_HANDLERS),
+        'frozendict': frozendict,
     },
     name='edn',
     unwrap=True)

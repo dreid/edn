@@ -4,6 +4,7 @@ import unittest
 import uuid
 
 import iso8601
+from perfidy import frozendict
 
 from edn import (
     DEFAULT_WRITE_HANDLERS,
@@ -88,10 +89,10 @@ baz\"""").string(), '\nfoo\nbar\nbaz')
             self.assertEqual(edn(edn_str).vector(), expected)
 
     def test_map(self):
-        maps = [("{}", {}),
-                ("{1 2}", {1: 2}),
+        maps = [("{}", frozendict({})),
+                ("{1 2}", frozendict({1: 2})),
                 ("{[1] {2 3}, (4 5 6), 7}",
-                 {(1,): {2: 3}, (4, 5, 6): 7})]
+                 frozendict({(1,): frozendict({2: 3}), (4, 5, 6): 7}))]
 
         for edn_str, expected in maps:
             self.assertEqual(edn(edn_str).map(), expected)
@@ -132,7 +133,7 @@ class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
         self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
-        self.assertEqual({1: 2, 3: 4}, loads('{1 2, 3 4}'))
+        self.assertEqual(frozendict({1: 2, 3: 4}), loads('{1 2, 3 4}'))
 
     def test_custom_tag(self):
         text = '#foo [1 2]'
