@@ -20,6 +20,7 @@ from edn import (
     dumps,
     edn,
     loads,
+    parse,
     unparse,
 )
 
@@ -130,6 +131,14 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
 
     def test_discard(self):
         self.assertEqual(edn('[1 2 #_foo 3]').edn(), Vector([1, 2, 3]))
+
+
+class ParseTestCase(object):
+    # DISABLED for the moment
+
+    def test_structure(self):
+        self.assertEqual(Set([1,2,3]), parse('#{1 2 3}'))
+        self.assertEqual(Map([(1, 2), (3, 4)]), parse('{1 2, 3 4}'))
 
 
 class LoadsTestCase(object):

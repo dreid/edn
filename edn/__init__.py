@@ -16,4 +16,5 @@ from ._edn import (
     loads,
     unparse,
     tagger,
+    parse,
 )

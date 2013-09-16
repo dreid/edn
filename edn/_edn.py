@@ -48,10 +48,14 @@ edn = makeGrammar(
     name='edn')
 
 
+def parse(string):
+    return edn(string).edn()
+
+
 def loads(string, handlers=None):
     if handlers is None:
         handlers = BUILTIN_READ_HANDLERS
-    return edn(string).edn()
+    return parse(string)
 
 
 def _dump_bool(obj):
