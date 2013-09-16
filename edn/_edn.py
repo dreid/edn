@@ -154,7 +154,7 @@ class _Builder(object):
         return f(built_terms)
 
 
-def serialize(obj):
+def unparse(obj):
     builder = _Builder()
     build = getattr(obj, 'build', None)
     if build:
@@ -177,4 +177,4 @@ def dumps(obj, write_handlers=None):
             obj = function(obj)
             break
 
-    return serialize(obj)
+    return unparse(obj)

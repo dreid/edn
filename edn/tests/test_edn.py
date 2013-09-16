@@ -20,7 +20,7 @@ from edn import (
     dumps,
     edn,
     loads,
-    serialize,
+    unparse,
 )
 
 
@@ -180,33 +180,33 @@ class LoadsTestCase(object):
         self.assertEqual(uuid.UUID(uid), loads(text))
 
 
-class SerializeTestCase(unittest.TestCase):
+class UnparseTestCase(unittest.TestCase):
 
     def test_nil(self):
-        self.assertEqual('nil', serialize(None))
+        self.assertEqual('nil', unparse(None))
 
     def test_integer(self):
-        self.assertEqual('1', serialize(1))
+        self.assertEqual('1', unparse(1))
 
     def test_long(self):
-        self.assertEqual('10000N', serialize(10000L))
+        self.assertEqual('10000N', unparse(10000L))
 
     def test_float(self):
         # FIXME: At least I have some idea of how ignorant this makes me look.
         # Figure out what's required to do this rigorously.
-        self.assertEqual('0.3', serialize(0.3))
+        self.assertEqual('0.3', unparse(0.3))
 
     def test_booleans(self):
-        self.assertEqual('true', serialize(True))
-        self.assertEqual('false', serialize(False))
+        self.assertEqual('true', unparse(True))
+        self.assertEqual('false', unparse(False))
 
     def test_simple_strings(self):
-        self.assertEqual('"foo"', serialize(String('foo')))
+        self.assertEqual('"foo"', unparse(String('foo')))
 
     def test_unicode(self):
         snowman = u'\u2603'
         encoded = snowman.encode('utf-8')
-        self.assertEqual('"' + encoded + '"', serialize(String(snowman)))
+        self.assertEqual('"' + encoded + '"', unparse(String(snowman)))
 
     def test_newlines(self):
         # It doesn't have to be this way.  EDN allows literal newlines in
@@ -215,52 +215,52 @@ class SerializeTestCase(unittest.TestCase):
         # bar'.  Thus, it's equally valid to not escape the newline but to
         # instead insert a literal space.  This is possibly a bug in the
         # spec.
-        self.assertEqual('"foo\\nbar"', serialize(String('foo\nbar')))
+        self.assertEqual('"foo\\nbar"', unparse(String('foo\nbar')))
 
     def test_escaping(self):
-        self.assertEqual('"foo\\rbar"', serialize(String('foo\rbar')))
-        self.assertEqual(r'"foo\\bar"', serialize(String(r'foo\bar')))
-        self.assertEqual('"foo\\"bar"', serialize(String('foo"bar')))
+        self.assertEqual('"foo\\rbar"', unparse(String('foo\rbar')))
+        self.assertEqual(r'"foo\\bar"', unparse(String(r'foo\bar')))
+        self.assertEqual('"foo\\"bar"', unparse(String('foo"bar')))
 
     def test_character(self):
-        self.assertEqual(r'\a', serialize(Character('a')))
+        self.assertEqual(r'\a', unparse(Character('a')))
 
     def test_symbol(self):
-        self.assertEqual("foo", serialize(Symbol("foo")))
-        self.assertEqual(".foo", serialize(Symbol(".foo")))
-        self.assertEqual("/", serialize(Symbol("/")))
-        self.assertEqual("foo/bar", serialize(Symbol("bar", "foo")))
+        self.assertEqual("foo", unparse(Symbol("foo")))
+        self.assertEqual(".foo", unparse(Symbol(".foo")))
+        self.assertEqual("/", unparse(Symbol("/")))
+        self.assertEqual("foo/bar", unparse(Symbol("bar", "foo")))
 
     def test_keyword(self):
-        self.assertEqual(":foo", serialize(Keyword(Symbol("foo"))))
-        self.assertEqual(":my/foo", serialize(Keyword(Symbol("foo", "my"))))
+        self.assertEqual(":foo", unparse(Keyword(Symbol("foo"))))
+        self.assertEqual(":my/foo", unparse(Keyword(Symbol("foo", "my"))))
 
     def test_vector(self):
-        self.assertEqual("[]", serialize(Vector()))
-        self.assertEqual("[a]", serialize(Vector(Symbol('a'),)))
-        self.assertEqual("[[] ()]", serialize(Vector((Vector(), List()))))
+        self.assertEqual("[]", unparse(Vector()))
+        self.assertEqual("[a]", unparse(Vector(Symbol('a'),)))
+        self.assertEqual("[[] ()]", unparse(Vector((Vector(), List()))))
 
     def test_list(self):
-        self.assertEqual("(a)", serialize(List((Symbol('a'),))))
-        self.assertEqual("()", serialize(List()))
-        self.assertEqual("(() ())", serialize(List((List(), List()))))
+        self.assertEqual("(a)", unparse(List((Symbol('a'),))))
+        self.assertEqual("()", unparse(List()))
+        self.assertEqual("(() ())", unparse(List((List(), List()))))
 
     def test_set(self):
-        self.assertEqual("#{}", serialize(Set()))
+        self.assertEqual("#{}", unparse(Set()))
         self.assertIn(
-            serialize(Set([1, 2, 3])),
+            unparse(Set([1, 2, 3])),
             frozenset(["#{1 2 3}", "#{1 3 2}",
                        "#{2 1 3}", "#{2 3 1}",
                        "#{3 1 2}", "#{3 2 1}"]))
 
     def test_map(self):
-        self.assertEqual("{}", serialize(Map()))
+        self.assertEqual("{}", unparse(Map()))
         self.assertEqual(
             '{:foo "bar"}',
-            serialize(
+            unparse(
                 Map(((Keyword(Symbol('foo')), String('bar')),))))
         self.assertIn(
-            serialize(
+            unparse(
                 Map(((Keyword(Symbol('foo')), String('bar')),
                      (Keyword(Symbol('baz')), String('qux'))))),
             set(['{:foo "bar" :baz "qux"}', '{:baz "qux" :foo "bar"}']))
@@ -268,7 +268,7 @@ class SerializeTestCase(unittest.TestCase):
     def test_tagged_value(self):
         self.assertEqual(
             '#foo "bar"',
-            serialize(TaggedValue(Symbol('foo'), String('bar'))))
+            unparse(TaggedValue(Symbol('foo'), String('bar'))))
 
 
 class DumpsTestCase(object):
