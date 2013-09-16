@@ -111,7 +111,8 @@ class _Builder(object):
             raise ValueError("Invalid symbol: %r" % (obj,))
 
     def _dump_TaggedValue(self, obj):
-        return map(dumps, [t.Symbol('#' + obj.tag.name), obj.value])
+        [tag, value] = obj
+        return '#%s %s' % (tag, value)
 
     def _dump_String(self, obj):
         obj = obj[0]

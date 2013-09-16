@@ -265,6 +265,11 @@ class SerializeTestCase(unittest.TestCase):
                      (Keyword(Symbol('baz')), String('qux'))))),
             set(['{:foo "bar" :baz "qux"}', '{:baz "qux" :foo "bar"}']))
 
+    def test_tagged_value(self):
+        self.assertEqual(
+            '#foo "bar"',
+            serialize(TaggedValue(Symbol('foo'), String('bar'))))
+
 
 class DumpsTestCase(object):
     # DISABLED for now
@@ -278,11 +283,6 @@ class DumpsTestCase(object):
         tz = iso8601.iso8601.FixedOffset(1, 0, '+01:00')
         sometime = datetime.datetime(2012, 5, 12, 14, 30, 0, tzinfo=tz)
         self.assertEqual('#inst "2012-05-12T14:30:00+01:00"', dumps(sometime))
-
-    def test_tagged_value(self):
-        self.assertEqual(
-            '#foo bar',
-            dumps(TaggedValue(Symbol('foo'), Symbol('bar'))))
 
     def test_uuid(self):
         uid = uuid.UUID("f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
