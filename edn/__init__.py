@@ -1,4 +1,4 @@
-from ._edn import (
+from ._ast import (
     DEFAULT_WRITE_HANDLERS,
     INST,
     Character,
