@@ -5,6 +5,7 @@ from ._edn import (
     List,
     Map,
     Set,
+    String,
     Symbol,
     TaggedValue,
     UUID,

@@ -99,7 +99,7 @@ escaped_characters = '\\' ('"' -> '"'
 
 punctuation = '.' | '*' | '+' | '!' | '-' | '_' | '?' | '$' | '%' | '&' | '='
 string = '"' (escaped_characters | ~('"') anything)*:c '"'
-         -> ''.join(c).decode('utf8')
+         -> String(''.join(c).decode('utf8'))
 
 # ### characters
 #

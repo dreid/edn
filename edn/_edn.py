@@ -11,6 +11,7 @@ Keyword = t.Keyword
 List = t.List
 Map = t.Map
 Set = t.Set
+String = t.String
 Symbol = t.Symbol
 TaggedValue = t.TaggedValue
 Vector = t.Vector
@@ -35,6 +36,7 @@ _edn_grammar_definition = open(_edn_grammar_file).read()
 edn = makeGrammar(
     _edn_grammar_definition,
     {
+        'String': String,
         'Symbol': Symbol,
         'Keyword': Keyword,
         'Vector': Vector,
