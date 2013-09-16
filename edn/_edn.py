@@ -1,4 +1,5 @@
 import datetime
+from functools import partial
 import os
 import uuid
 
@@ -60,80 +61,6 @@ def _dump_bool(obj):
         return 'false'
 
 
-def _dump_str(obj):
-    quote = '"'
-    escape = {
-        '"': r'\"',
-        '\\': r'\\',
-        '\n': r'\n',
-        '\r': r'\r',
-        '\t': r'\t',
-        '\b': r'\b',
-        '\f': r'\f',
-    }
-    output = [quote]
-    encoded = obj.encode('utf8')
-    for byte in encoded:
-        escaped = escape.get(byte, byte)
-        output.append(escaped)
-    output.append(quote)
-    return ''.join(output)
-
-
-def _dump_symbol(obj):
-    if obj.prefix:
-        return ['%s/%s' % (obj.prefix, obj.name)]
-    return obj.name
-
-
-def _dump_keyword(obj):
-    if obj.prefix:
-        return [':%s/%s' % (obj.prefix, obj.name)]
-    return ':' + obj.name
-
-
-def _dump_list(xs, write_handlers=None):
-    return ['(', [dumps(x, write_handlers) for x in xs], ')']
-
-
-def _dump_set(xs, write_handlers=None):
-    return ['#{', [dumps(x, write_handlers) for x in xs], '}']
-
-
-def _dump_dict(obj, write_handlers=None):
-    # XXX: Comma is optional.  Should there be an option?
-    return ['{', [[dumps(k, write_handlers), dumps(v, write_handlers)]
-                  for k, v in obj.items()], '}']
-
-
-def _dump_tagged_value(obj):
-    return map(dumps, [t.Symbol('#' + obj.tag.name), obj.value])
-
-
-# XXX: Not directly tested
-def _flatten(tokens):
-    if isinstance(tokens, (list, tuple)):
-        for token in tokens:
-            for subtoken in _flatten(token):
-                yield subtoken
-    else:
-        yield tokens
-
-
-# XXX: Not directly tested
-def _format(tokens):
-    last_token = None
-    open_brackets = frozenset(['{', '#{', '(', '[', None])
-    close_brackets = '})]'
-    for token in tokens:
-        if last_token not in open_brackets and token not in close_brackets:
-            yield ' '
-        yield token
-        last_token = token
-
-# XXX: Pretty printer
-
-
 # XXX: This is a poor way of doing type-based dispatch.  Some thoughts:
 # - are we sure that we _always_ want to do type-based dispatch?  the
 #   most flexible way to do this is to have arbritrary predicates, or
@@ -154,6 +81,86 @@ def tagger(tag, function):
     return wrapped
 
 
+def _wrap(start, end, middle):
+    return ''.join([start] + middle + [end])
+
+
+class _Builder(object):
+
+    PRIMITIVES = (
+        (bool, _dump_bool),
+        ((int, float), str),
+        (long, lambda x: str(x) + 'N'),
+        (type(None), lambda x: 'nil'),
+        (unicode, unicode),
+        (str, str),
+    )
+
+    def _dump_Character(self, obj):
+        return '\\' + obj[0]
+
+    def _dump_Keyword(self, obj):
+        return ':' + obj[0]
+
+    def _dump_Symbol(self, obj):
+        if len(obj) == 2:
+            return '%s/%s' % (obj[1], obj[0])
+        elif len(obj) == 1:
+            return obj[0]
+        else:
+            raise ValueError("Invalid symbol: %r" % (obj,))
+
+    def _dump_TaggedValue(self, obj):
+        return map(dumps, [t.Symbol('#' + obj.tag.name), obj.value])
+
+    def _dump_String(self, obj):
+        obj = obj[0]
+        quote = '"'
+        escape = {
+            '"': r'\"',
+            '\\': r'\\',
+            '\n': r'\n',
+            '\r': r'\r',
+            '\t': r'\t',
+            '\b': r'\b',
+            '\f': r'\f',
+        }
+        output = [quote]
+        encoded = obj.encode('utf8')
+        for byte in encoded:
+            escaped = escape.get(byte, byte)
+            output.append(escaped)
+        output.append(quote)
+        return ''.join(output)
+
+    _dump_List = partial(_wrap, '(', ')')
+    _dump_Vector = partial(_wrap, '[', ']')
+    _dump_Set = partial(_wrap, '#{', '}')
+    _dump_Map = partial(_wrap, '{', '}')
+
+    def leafTag(self, tag, span):
+        if tag.name == '.tuple.':
+            return ' '.join
+        return getattr(self, '_dump_%s' % (tag.name,))
+
+    def leafData(self, data, span=None):
+        for base_type, dump_rule in self.PRIMITIVES:
+            if isinstance(data, base_type):
+                return lambda args: dump_rule(data)
+        raise ValueError("Cannot encode %r" % (data,))
+
+    def term(self, f, built_terms):
+        return f(built_terms)
+
+
+def serialize(obj):
+    builder = _Builder()
+    build = getattr(obj, 'build', None)
+    if build:
+        return build(builder)
+    return builder.leafData(obj)(obj)
+
+
 DEFAULT_WRITE_HANDLERS = [
     (datetime.datetime, tagger(INST, lambda x: x.isoformat())),
     (uuid.UUID, tagger(UUID, str)),
@@ -169,21 +176,4 @@ def dumps(obj, write_handlers=None):
             obj = function(obj)
             break
 
-    RULES = [
-        (bool, _dump_bool),
-        ((int, float), str),
-        (long, lambda x: str(x) + 'N'),
-        ((unicode, str), _dump_str),
-        (type(None), lambda x: 'nil'),
-        (t.Keyword, _dump_keyword),
-        (t.Symbol, _dump_symbol),
-        (t.TaggedValue, _dump_tagged_value),
-        ((list, tuple), lambda x: _dump_list(x, write_handlers)),
-        ((set, frozenset), lambda x: _dump_set(x, write_handlers)),
-        (dict, lambda x: _dump_dict(x, write_handlers)),
-    ]
-    for base_type, dump_rule in RULES:
-        if isinstance(obj, base_type):
-            tokens = dump_rule(obj)
-            return ''.join(_format(_flatten(tokens)))
-    raise ValueError("Cannot encode %r" % (obj,))
+    return serialize(obj)

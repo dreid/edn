@@ -14,5 +14,6 @@ from ._edn import (
     dumps,
     edn,
     loads,
+    serialize,
     tagger,
 )
