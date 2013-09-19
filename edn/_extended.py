@@ -109,6 +109,7 @@ def decode(term, readers=frozendict(), default=None):
 
 
 def loads(string, readers=frozendict()):
+def loads(string, readers=frozendict(), default=None):
     """Interpret an edn string.
 
     :param term: A parsed edn term, probably got from `edn.parse`.
@@ -118,7 +119,7 @@ def loads(string, readers=frozendict()):
         which can be overridden here.
     :return: Whatever the string is interpreted as.
     """
-    return decode(parse(string), readers)
+    return decode(parse(string), readers, default)
 
 
 def tagger(tag, function):
