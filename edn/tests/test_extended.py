@@ -24,6 +24,7 @@ from edn._ast import (
 )
 from edn._extended import (
     decode,
+    encode,
     INST,
     UUID,
 )
@@ -136,6 +137,12 @@ class LoadsTestCase(unittest.TestCase):
         loads(text, {foo: lambda x: list(reversed(x))})
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
+
+
+class EncoderTests(unittest.TestCase):
+
+    def test_string(self):
+        self.assertEqual(String(u"foo"), encode(u"foo"))
 
 
 class DumpsTestCase(object):
