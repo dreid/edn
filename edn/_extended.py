@@ -1,4 +1,3 @@
-from collections import namedtuple
 import datetime
 import uuid
 
@@ -98,10 +97,8 @@ def decode(obj, readers=frozendict(), default=None):
     return builder.leafData(obj)(obj)
 
 
-def loads(string, handlers=None):
-    if handlers is None:
-        handlers = BUILTIN_READ_HANDLERS
-    return parse(string)
+def loads(string, readers=frozendict()):
+    return decode(parse(string), readers)
 
 
 def tagger(tag, function):

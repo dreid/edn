@@ -114,7 +114,7 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(uuid.UUID(uid), decode(ast))
 
 
-class LoadsTestCase(object):
+class LoadsTestCase(unittest.TestCase):
     # DISABLED for the moment
 
     def test_structure(self):
@@ -131,8 +131,7 @@ class LoadsTestCase(object):
         text = '#foo [1 2]'
         loads(text, {foo: lambda x: list(reversed(x))})
         parsed = loads(text)
-        self.assertEqual(TaggedValue(foo, Vector([1, 2])), parsed)
-
+        self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
 
 
 class DumpsTestCase(object):
