@@ -115,7 +115,6 @@ class DecoderTests(unittest.TestCase):
 
 
 class LoadsTestCase(unittest.TestCase):
-    # DISABLED for the moment
 
     def test_structure(self):
         self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))

@@ -14,10 +14,6 @@ from ._ast import (
 
 
 # TODO(jml):
-# - write code that turns AST into Python objects
-#   - perfidious ones
-#   - regular ones
-#   [probably parametrize with some term -> constructor map]
 # - write code that turns Python objects into AST
 # - probably put the top level of convenience (dumps/loads) in
 #   yet another module
@@ -27,6 +23,8 @@ from ._ast import (
 # Almost 100% of the extension is going to be turning a domain-specific object
 # into a tagged value and back.  Make sure there's a good API for that.
 
+
+# XXX: Clarify what's exported at the top package level.
 
 
 def constantly(x):
@@ -55,6 +53,12 @@ DEFAULT_READERS = frozendict({
     UUID: uuid.UUID,
 })
 
+
+# XXX: This and the builder in _ast have roughly the same shape and similar
+# problems (leafData is weird, shouldn't even need to handle '.tuple.',
+# dispatch is inevitably on tag.name, 'term' method is almost guaranteed
+# useless).  Muck around a bit with making a better direct API for term
+# traversal in terml.
 
 class _Decoder(object):
 
@@ -108,7 +112,13 @@ def decode(term, readers=frozendict(), default=None):
     return builder.leafData(term)(term)
 
 
-def loads(string, readers=frozendict()):
+# XXX: 'decode' and 'encode' aren't great names.
+
+# XXX: 'reader' terminology lifted from
+# http://clojure.github.io/clojure/clojure.edn-api.html but the format talks
+# of 'handlers'.
+
+
 def loads(string, readers=frozendict(), default=None):
     """Interpret an edn string.
 
@@ -146,6 +156,11 @@ DEFAULT_WRITE_HANDLERS = [
     (datetime.datetime, tagger(INST, lambda x: x.isoformat())),
     (uuid.UUID, tagger(UUID, str)),
 ]
+
+
+def encode(obj):
+    """Take a Python object and return an edn AST."""
+    pass
 
 
 def dumps(obj, write_handlers=None):
