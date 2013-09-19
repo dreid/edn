@@ -87,17 +87,37 @@ class _Decoder(object):
         return f(*terms)
 
 
-def decode(obj, readers=frozendict(), default=None):
+def decode(term, readers=frozendict(), default=None):
+    """Take a parsed edn term and return a useful Python object.
+
+    :param term: A parsed edn term, probably got from `edn.parse`.
+    :param readers: A map from tag symbols to callables.  For '#foo bar'
+        whatever callable the Symbol('foo') key is mapped to will be
+        called with 'bar'.  There are default readers for #inst and #uuid,
+        which can be overridden here.
+    :param default: callable taking a symbol & value that's called when
+        there's no tag symbol in the reader.
+    :return: Whatever term gets decoded to.
+    """
     # XXX: Maybe leave this level policy-free, passing in _DECODERS and
     # DEFAULT_READERS and leave the default policy shenanigans up to loads
     builder = _Decoder(_DECODERS, DEFAULT_READERS.merge(readers), default)
-    build = getattr(obj, 'build', None)
+    build = getattr(term, 'build', None)
     if build:
         return build(builder)
-    return builder.leafData(obj)(obj)
+    return builder.leafData(term)(term)
 
 
 def loads(string, readers=frozendict()):
+    """Interpret an edn string.
+
+    :param term: A parsed edn term, probably got from `edn.parse`.
+    :param readers: A map from tag symbols to callables.  For '#foo bar'
+        whatever callable the Symbol('foo') key is mapped to will be
+        called with 'bar'.  There are default readers for #inst and #uuid,
+        which can be overridden here.
+    :return: Whatever the string is interpreted as.
+    """
     return decode(parse(string), readers)
 
 
