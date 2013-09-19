@@ -74,6 +74,12 @@ class DecoderTests(unittest.TestCase):
             ast, frozendict({Symbol('foo'): lambda x: list(reversed(x))}))
         self.assertEqual([u'r', u'a', u'b'], result)
 
+    def test_default_tagged_value(self):
+        handler = lambda s, v: ('default', s, v)
+        result = decode(
+            TaggedValue(Symbol('foo'), String('bar')), default=handler)
+        self.assertEqual(('default', Symbol('foo'), u'bar'), result)
+
 
 class LoadsTestCase(object):
     # DISABLED for the moment

@@ -49,18 +49,21 @@ _DECODERS = frozendict({
 
 class _Decoder(object):
 
-    def __init__(self, readers):
+    def __init__(self, readers, default):
         if not readers:
             readers = frozendict()
         self._readers = readers
         self._decoders = _DECODERS.with_pair(
             'TaggedValue', self._handle_tagged_value)
+        if not default:
+            default = TaggedValue
+        self._default = default
 
     def _handle_tagged_value(self, symbol, value):
         reader = self._readers.get(symbol)
         if reader:
             return reader(value)
-        return TaggedValue(symbol, value)
+        return self._default(symbol, value)
 
     def leafTag(self, tag, span):
         decoder = self._decoders.get(tag.name, None)
@@ -75,8 +78,8 @@ class _Decoder(object):
         return f(*terms)
 
 
-def decode(obj, readers=None):
-    builder = _Decoder(readers)
+def decode(obj, readers=None, default=None):
+    builder = _Decoder(readers, default)
     build = getattr(obj, 'build', None)
     if build:
         return build(builder)
