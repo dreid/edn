@@ -49,11 +49,11 @@ _DECODERS = frozendict({
 
 class _Decoder(object):
 
-    def __init__(self, readers, default):
+    def __init__(self, decoders, readers, default):
         if not readers:
             readers = frozendict()
         self._readers = readers
-        self._decoders = _DECODERS.with_pair(
+        self._decoders = decoders.with_pair(
             'TaggedValue', self._handle_tagged_value)
         if not default:
             default = TaggedValue
@@ -79,7 +79,7 @@ class _Decoder(object):
 
 
 def decode(obj, readers=None, default=None):
-    builder = _Decoder(readers, default)
+    builder = _Decoder(_DECODERS, readers, default)
     build = getattr(obj, 'build', None)
     if build:
         return build(builder)
