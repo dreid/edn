@@ -44,7 +44,6 @@ _DECODERS = frozendict({
     'Set': frozenset,
     'Symbol': Symbol,
     'Keyword': Keyword,
-    'TaggedValue': TaggedValue,
 })
 
 
@@ -56,8 +55,21 @@ class Keyword(namedtuple('Keyword', 'name prefix')):
 
 class _Decoder(object):
 
+    def __init__(self, readers):
+        if not readers:
+            readers = frozendict()
+        self._readers = readers
+        self._decoders = _DECODERS.with_pair(
+            'TaggedValue', self._handle_tagged_value)
+
+    def _handle_tagged_value(self, symbol, value):
+        reader = self._readers.get(symbol)
+        if reader:
+            return reader(value)
+        return TaggedValue(symbol, value)
+
     def leafTag(self, tag, span):
-        decoder = _DECODERS.get(tag.name, None)
+        decoder = self._decoders.get(tag.name, None)
         if not decoder:
             raise ValueError("Cannot decode %r" % (tag.name,))
         return decoder
@@ -69,8 +81,8 @@ class _Decoder(object):
         return f(*terms)
 
 
-def decode(obj):
-    builder = _Decoder()
+def decode(obj, readers=None):
+    builder = _Decoder(readers)
     build = getattr(obj, 'build', None)
     if build:
         return build(builder)

@@ -68,6 +68,12 @@ class DecoderTests(unittest.TestCase):
             TaggedValue(Symbol('foo'), 'bar'),
             decode(TaggedValue(Symbol('foo'), String('bar'))))
 
+    def test_readers(self):
+        ast = TaggedValue(Symbol('foo'), String('bar'))
+        result = decode(
+            ast, frozendict({Symbol('foo'): lambda x: list(reversed(x))}))
+        self.assertEqual([u'r', u'a', u'b'], result)
+
 
 class LoadsTestCase(object):
     # DISABLED for the moment
