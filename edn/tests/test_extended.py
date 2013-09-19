@@ -22,7 +22,11 @@ from edn._ast import (
     TaggedValue,
     Vector,
 )
-from edn._extended import decode
+from edn._extended import (
+    decode,
+    INST,
+    UUID,
+)
 
 
 class DecoderTests(unittest.TestCase):
@@ -80,6 +84,35 @@ class DecoderTests(unittest.TestCase):
             TaggedValue(Symbol('foo'), String('bar')), default=handler)
         self.assertEqual(('default', Symbol('foo'), u'bar'), result)
 
+    def test_inst(self):
+        inst = TaggedValue(INST, String("1985-04-12T23:20:50.52Z"))
+        result = decode(inst)
+        self.assertEqual(
+            datetime.datetime(
+                1985, 4, 12, 23, 20, 50, 520000, tzinfo=iso8601.iso8601.UTC),
+            result)
+
+    def test_inst_with_tz(self):
+        inst = TaggedValue(INST, String("1985-04-12T23:20:50.52-05:30"))
+        result = decode(inst)
+        expected_tz = iso8601.iso8601.FixedOffset(-5, -30, '-05:30')
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
+                              tzinfo=expected_tz),
+            result)
+
+    def test_inst_without_fractional(self):
+        inst = TaggedValue(INST, String("1985-04-12T23:20:50Z"))
+        result = decode(inst)
+        self.assertEqual(
+            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
+            result)
+
+    def test_uuid(self):
+        uid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
+        ast = TaggedValue(UUID, String(uid))
+        self.assertEqual(uuid.UUID(uid), decode(ast))
+
 
 class LoadsTestCase(object):
     # DISABLED for the moment
@@ -100,33 +133,6 @@ class LoadsTestCase(object):
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, Vector([1, 2])), parsed)
 
-    def test_inst(self):
-        text = '#inst "1985-04-12T23:20:50.52Z"'
-        parsed = loads(text)
-        self.assertEqual(
-            datetime.datetime(
-                1985, 4, 12, 23, 20, 50, 520000, tzinfo=iso8601.iso8601.UTC), parsed)
-
-    def test_inst_with_tz(self):
-        text = '#inst "1985-04-12T23:20:50.52-05:30"'
-        parsed = loads(text)
-        expected_tz = iso8601.iso8601.FixedOffset(-5, -30, '-05:30')
-        self.assertEqual(
-            datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
-                              tzinfo=expected_tz),
-            parsed)
-
-    def test_inst_without_fractional(self):
-        text = '#inst "1985-04-12T23:20:50Z"'
-        parsed = loads(text)
-        self.assertEqual(
-            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
-            parsed)
-
-    def test_uuid(self):
-        uid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
-        text = '#uuid "%s"' % (uid,)
-        self.assertEqual(uuid.UUID(uid), loads(text))
 
 
 class DumpsTestCase(object):

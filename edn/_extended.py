@@ -47,6 +47,16 @@ _DECODERS = frozendict({
 })
 
 
+INST = Symbol('inst')
+UUID = Symbol('uuid')
+
+
+DEFAULT_READERS = frozendict({
+    INST: iso8601.parse_date,
+    UUID: uuid.UUID,
+})
+
+
 class _Decoder(object):
 
     def __init__(self, decoders, readers, default):
@@ -78,22 +88,14 @@ class _Decoder(object):
         return f(*terms)
 
 
-def decode(obj, readers=None, default=None):
-    builder = _Decoder(_DECODERS, readers, default)
+def decode(obj, readers=frozendict(), default=None):
+    # XXX: Maybe leave this level policy-free, passing in _DECODERS and
+    # DEFAULT_READERS and leave the default policy shenanigans up to loads
+    builder = _Decoder(_DECODERS, DEFAULT_READERS.merge(readers), default)
     build = getattr(obj, 'build', None)
     if build:
         return build(builder)
     return builder.leafData(obj)(obj)
-
-
-INST = Symbol('inst')
-UUID = Symbol('uuid')
-
-
-BUILTIN_READ_HANDLERS = {
-    INST: iso8601.parse_date,
-    UUID: uuid.UUID,
-}
 
 
 def loads(string, handlers=None):
