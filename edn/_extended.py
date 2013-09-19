@@ -1,9 +1,12 @@
+from collections import namedtuple
 import datetime
 import uuid
 
 import iso8601
+from perfidy import frozendict
 
 from ._ast import (
+    Keyword,
     Symbol,
     TaggedValue,
     parse,
@@ -24,6 +27,54 @@ from ._ast import (
 #
 # Almost 100% of the extension is going to be turning a domain-specific object
 # into a tagged value and back.  Make sure there's a good API for that.
+
+
+
+def constantly(x):
+    return lambda *a, **kw: x
+
+
+_DECODERS = frozendict({
+    '.tuple.': lambda *a: a,
+    'Character': unicode,
+    'String': unicode,
+    'Vector': tuple,
+    'List': tuple,
+    'Map': frozendict,
+    'Set': frozenset,
+    'Symbol': Symbol,
+    'Keyword': Keyword,
+    'TaggedValue': TaggedValue,
+})
+
+
+class Keyword(namedtuple('Keyword', 'name prefix')):
+
+    def __new__(cls, name, prefix=None):
+        super(Keyword, cls).__new__(name, prefix)
+
+
+class _Decoder(object):
+
+    def leafTag(self, tag, span):
+        decoder = _DECODERS.get(tag.name, None)
+        if not decoder:
+            raise ValueError("Cannot decode %r" % (tag.name,))
+        return decoder
+
+    def leafData(self, data, span=None):
+        return constantly(data)
+
+    def term(self, f, terms):
+        return f(*terms)
+
+
+def decode(obj):
+    builder = _Decoder()
+    build = getattr(obj, 'build', None)
+    if build:
+        return build(builder)
+    return builder.leafData(obj)(obj)
 
 
 INST = Symbol('inst')

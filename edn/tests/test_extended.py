@@ -1,5 +1,6 @@
 from collections import namedtuple
 import datetime
+import unittest
 import uuid
 
 import iso8601
@@ -10,11 +11,62 @@ from edn import (
     dumps,
     loads,
 )
-from edn import (
+from edn._ast import (
+    Character,
+    Keyword,
+    List,
+    Map,
+    Set,
+    String,
     Symbol,
     TaggedValue,
     Vector,
 )
+from edn._extended import decode
+
+
+class DecoderTests(unittest.TestCase):
+
+    def test_bool(self):
+        self.assertEqual(True, decode(True))
+        self.assertEqual(False, decode(False))
+
+    def test_int(self):
+        self.assertEqual(42, decode(42))
+
+    def test_string(self):
+        self.assertEqual("foo", decode(String("foo")))
+
+    def test_character(self):
+        self.assertEqual('f', decode(Character('f')))
+
+    def test_none(self):
+        self.assertEqual(None, decode(None))
+
+    def test_vector(self):
+        self.assertEqual((1, 2, 3), decode(Vector((1, 2, 3))))
+
+    def test_list(self):
+        self.assertEqual((1, 2, 3), decode(List((1, 2, 3))))
+
+    def test_set(self):
+        self.assertEqual(frozenset((1, 2, 3)), decode(Set((1, 2, 3))))
+
+    def test_map(self):
+        self.assertEqual(
+            frozendict({1: 2, 3: 4}), decode(Map(((1, 2), (3, 4)))))
+
+    def test_symbol(self):
+        self.assertEqual(Symbol('foo'), decode(Symbol('foo')))
+
+    def test_keyword(self):
+        self.assertEqual(
+            Keyword(Symbol('foo')), decode(Keyword(Symbol('foo'))))
+
+    def test_tagged_value(self):
+        self.assertEqual(
+            TaggedValue(Symbol('foo'), 'bar'),
+            decode(TaggedValue(Symbol('foo'), String('bar'))))
 
 
 class LoadsTestCase(object):
