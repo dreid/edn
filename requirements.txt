@@ -1,2 +1,0 @@
-Parsley>=1.1pre1
-iso8601

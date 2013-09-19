@@ -1,6 +1,7 @@
 from collections import namedtuple
 import datetime
 from functools import partial
+import os
 import uuid
 
 from parsley import makeGrammar, wrapGrammar
@@ -53,7 +54,8 @@ def make_tagged_value(handlers, symbol, value, no_handler=TaggedValue):
 # XXX: There needs to be a character type and a string-that-escapes-newlines
 # type in order to have full roundtripping.
 
-_edn_grammar_definition = open('edn.parsley').read()
+_edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
+_edn_grammar_definition = open(_edn_grammar_file).read()
 
 _unwrapped_edn = makeGrammar(
     _edn_grammar_definition,
