@@ -47,12 +47,6 @@ _DECODERS = frozendict({
 })
 
 
-class Keyword(namedtuple('Keyword', 'name prefix')):
-
-    def __new__(cls, name, prefix=None):
-        super(Keyword, cls).__new__(name, prefix)
-
-
 class _Decoder(object):
 
     def __init__(self, readers):
