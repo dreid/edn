@@ -18,23 +18,6 @@ from ._ast import (
 )
 
 
-# TODO(jml):
-# - write code that turns Python objects into AST
-# - probably put the top level of convenience (dumps/loads) in
-#   yet another module
-
-# TODO(jml)
-#
-# Almost 100% of the extension is going to be turning a domain-specific object
-# into a tagged value and back.  Make sure there's a good API for that.
-
-# XXX: Should there be exposed Keyword and Symbol objects that are *not*
-# terms, but rather representing actual keywords and symbols?  Would make some
-# things (e.g. type-based dispatch in encode) easier.
-
-# XXX: Clarify what's exported at the top package level.
-
-
 def constantly(x):
     return lambda *a, **kw: x
 
@@ -61,12 +44,6 @@ DEFAULT_READERS = frozendict({
     UUID: uuid.UUID,
 })
 
-
-# XXX: This and the builder in _ast have roughly the same shape and similar
-# problems (leafData is weird, shouldn't even need to handle '.tuple.',
-# dispatch is inevitably on tag.name, 'term' method is almost guaranteed
-# useless).  Muck around a bit with making a better direct API for term
-# traversal in terml.
 
 class _Decoder(object):
 
@@ -111,20 +88,11 @@ def decode(term, readers=frozendict(), default=None):
         there's no tag symbol in the reader.
     :return: Whatever term gets decoded to.
     """
-    # XXX: Maybe leave this level policy-free, passing in _DECODERS and
-    # DEFAULT_READERS and leave the default policy shenanigans up to loads
     builder = _Decoder(_DECODERS, DEFAULT_READERS.merge(readers), default)
     build = getattr(term, 'build', None)
     if build:
         return build(builder)
     return builder.leafData(term)(term)
-
-
-# XXX: 'decode' and 'encode' aren't great names.
-
-# XXX: 'reader' terminology lifted from
-# http://clojure.github.io/clojure/clojure.edn-api.html but the format talks
-# of 'handlers'.
 
 
 def loads(string, readers=frozendict(), default=None):
@@ -167,9 +135,6 @@ _BASE_ENCODING_RULES = (
 
 def encode(obj):
     """Take a Python object and return an edn AST."""
-    # TODO(jml): Handle custom writers
-    # TODO(jml): Use a frozendict rather than if/else
-    # TODO(jml): Possibly refactor to separate Python object traversal
     # Separate logic since we can't do isinstance checks on these.
     if _get_tag_name(obj) in ('Keyword', 'Symbol'):
         return obj
@@ -178,9 +143,6 @@ def encode(obj):
             if isinstance(obj, base_types):
                 return encoder(obj)
         # For unknown types, just return the object and hope for the best.
-        #
-        # XXX: Perhaps create an unknown_handler, and also base rules for
-        # encoding supported types like int, float, and so forth.
         return obj
 
 

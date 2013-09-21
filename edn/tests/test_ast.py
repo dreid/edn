@@ -143,8 +143,6 @@ class UnparseTestCase(unittest.TestCase):
         self.assertEqual('10000N', unparse(10000L))
 
     def test_float(self):
-        # FIXME: At least I have some idea of how ignorant this makes me look.
-        # Figure out what's required to do this rigorously.
         self.assertEqual('0.3', unparse(0.3))
 
     def test_booleans(self):

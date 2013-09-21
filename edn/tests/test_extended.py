@@ -165,8 +165,6 @@ class EncoderTests(unittest.TestCase):
         self.assertEqual(Vector((1, 2, 3)), encode([1, 2, 3]))
 
     def test_datetime(self):
-        # XXX: Maybe give Symbol a makeTag method, so that
-        # INST.makeTag("2013-...") works?
         self.assertEqual(
             TaggedValue(INST, String("2013-12-25T19:32:55+00:00")),
             encode(datetime.datetime(2013, 12, 25, 19, 32, 55,
