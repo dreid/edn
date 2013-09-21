@@ -2,7 +2,7 @@ from functools import partial
 import os
 
 from parsley import makeGrammar
-from terml.nodes import termMaker as t
+from terml.nodes import coerceToTerm, termMaker as t
 
 
 Character = t.Character
@@ -53,13 +53,20 @@ def _wrap(start, end, middle):
 class _Builder(object):
 
     PRIMITIVES = (
-        (bool, _dump_bool),
         ((int, float), str),
         (long, lambda x: str(x) + 'N'),
-        (type(None), lambda x: 'nil'),
         (unicode, unicode),
         (str, str),
     )
+
+    def _dump_true(self, obj):
+        return 'true'
+
+    def _dump_false(self, obj):
+        return 'false'
+
+    def _dump_null(self, obj):
+        return 'nil'
 
     def _dump_Character(self, obj):
         return '\\' + obj[0]
@@ -121,7 +128,4 @@ class _Builder(object):
 
 def unparse(obj):
     builder = _Builder()
-    build = getattr(obj, 'build', None)
-    if build:
-        return build(builder)
-    return builder.leafData(obj)(obj)
+    return coerceToTerm(obj).build(builder)

@@ -138,6 +138,10 @@ class LoadsTestCase(unittest.TestCase):
 
 class EncoderTests(unittest.TestCase):
 
+    def test_none(self):
+        self.assertEqual(None, encode(None))
+        self.assertEqual(List((String('b'), None)), encode(('b', None)))
+
     def test_string(self):
         self.assertEqual(String(u"foo"), encode(u"foo"))
         self.assertEqual(String("foo"), encode("foo"))
@@ -242,3 +246,7 @@ class DumpsTestCase(unittest.TestCase):
         writer = lambda p: (p.x, p.y)
         output = dumps(point(2, 3), [(point, Symbol('point'), writer)])
         self.assertEqual('#point (2 3)', output)
+
+    def test_null(self):
+        self.assertEqual('nil', dumps(None))
+        self.assertEqual('("b" nil)', dumps(('b', None)))

@@ -135,9 +135,11 @@ class UnparseTestCase(unittest.TestCase):
 
     def test_nil(self):
         self.assertEqual('nil', unparse(None))
+        self.assertEqual('("b" nil)', unparse(List((String('b'), None))))
 
     def test_integer(self):
         self.assertEqual('1', unparse(1))
+        self.assertEqual('(1 2)', unparse(List((1, 2))))
 
     def test_long(self):
         self.assertEqual('10000N', unparse(10000L))
