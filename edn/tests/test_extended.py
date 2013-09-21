@@ -196,6 +196,19 @@ class EncoderTests(unittest.TestCase):
         encoded = encode(data)
         self.assertEqual(List((String('foo'), String('bar'))), encoded)
 
+    def test_custom_writer(self):
+        point = namedtuple('point', 'x y')
+        writer = lambda p: (p.x, p.y)
+        encoded = encode(point(2, 3), [(point, Symbol('point'), writer)])
+        self.assertEqual(TaggedValue(Symbol('point'), List((2, 3))), encoded)
+
+    def test_nested_custom_writer(self):
+        point = namedtuple('point', 'x y')
+        writer = lambda p: (p.x, p.y)
+        encoded = encode({1: point(2, 3)}, [(point, Symbol('point'), writer)])
+        self.assertEqual(
+            Map(((1, TaggedValue(Symbol('point'), List((2, 3)))),)), encoded)
+
 
 class DumpsTestCase(unittest.TestCase):
 

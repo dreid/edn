@@ -117,19 +117,9 @@ def _get_tag_name(obj):
         return getattr(tag, 'name', None)
 
 
-def _encode_map(obj):
-    return Map([(encode(k), encode(v)) for k, v in obj.items()])
+def _make_tag_rule(tag, writer):
+    return lambda obj: TaggedValue(tag, encode(writer(obj)))
 
-
-# Basic mapping from core Python types to edn AST elements
-# Also includes logic on how to traverse down.
-_BASE_ENCODING_RULES = (
-    ((str, unicode), String),
-    ((dict, frozendict), _encode_map),
-    ((set, frozenset), lambda obj: Set(map(encode, obj))),
-    (tuple, lambda obj: List(map(encode, obj))),
-    (list,  lambda obj: Vector(map(encode, obj))),
-)
 
 DEFAULT_WRITERS = (
     (datetime.datetime, INST, caller('isoformat')),
@@ -137,15 +127,26 @@ DEFAULT_WRITERS = (
 )
 
 
-def _make_tag_rule(tag, writer):
-    return lambda obj: TaggedValue(tag, encode(writer(obj)))
-
-
-def encode(obj):
+def encode(obj, writers=()):
     """Take a Python object and return an edn AST."""
-    rules = tuple(
-        (base_types, _make_tag_rule(tag, writer))
-        for base_types, tag, writer in DEFAULT_WRITERS) + _BASE_ENCODING_RULES
+    # Basic mapping from core Python types to edn AST elements
+    # Also includes logic on how to traverse down.
+    _base_encoding_rules = (
+        ((str, unicode), String),
+        ((dict, frozendict),
+         lambda x: Map(
+             [(encode(k, writers), encode(v, writers)) for k, v in obj.items()])),
+        ((set, frozenset), lambda obj: Set([encode(x, writers) for x in obj])),
+        (tuple, lambda obj: List([encode(x, writers) for x in obj])),
+        (list,  lambda obj: Vector([encode(x, writers) for x in obj])),
+    )
+
+    rules = (
+        tuple(
+            (base_types, _make_tag_rule(tag, writer))
+            for base_types, tag, writer in tuple(writers) + DEFAULT_WRITERS)
+        + _base_encoding_rules)
+
     # Separate logic since we can't do isinstance checks on these.
     if _get_tag_name(obj) in ('Keyword', 'Symbol'):
         return obj
