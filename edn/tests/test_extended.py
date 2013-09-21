@@ -224,3 +224,6 @@ class DumpsTestCase(unittest.TestCase):
         foo = namedtuple('foo', 'x y')
         a = foo(1, 2)
         self.assertEqual('(1 2)', dumps(a))
+
+    def test_escaped_string(self):
+        self.assertEqual('"foo\\nbar"', dumps('foo\nbar'))

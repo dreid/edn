@@ -152,7 +152,6 @@ class UnparseTestCase(unittest.TestCase):
         self.assertEqual('false', unparse(False))
 
     def test_simple_strings(self):
-        # TODO(jml): Of course, this needs to do escaping of slashes.
         self.assertEqual('"foo"', unparse(String('foo')))
 
     def test_unicode(self):
