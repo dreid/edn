@@ -15,7 +15,8 @@ Symbol = t.Symbol
 TaggedValue = t.TaggedValue
 Vector = t.Vector
 
-
+# TODO(jml): Double check dreid's numbers branch to see that we're doing ours
+# correctly here.
 
 _edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
 _edn_grammar_definition = open(_edn_grammar_file).read()

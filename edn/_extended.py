@@ -28,6 +28,9 @@ from ._ast import (
 # Almost 100% of the extension is going to be turning a domain-specific object
 # into a tagged value and back.  Make sure there's a good API for that.
 
+# XXX: Should there be exposed Keyword and Symbol objects that are *not*
+# terms, but rather representing actual keywords and symbols?  Would make some
+# things (e.g. type-based dispatch in encode) easier.
 
 # XXX: Clarify what's exported at the top package level.
 
