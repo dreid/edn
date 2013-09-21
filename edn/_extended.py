@@ -137,32 +137,6 @@ def loads(string, readers=frozendict(), default=None):
     return decode(parse(string), readers, default)
 
 
-def tagger(tag, function):
-    def wrapped(*args, **kwargs):
-        return TaggedValue(tag, function(*args, **kwargs))
-    return wrapped
-
-
-# XXX: This is a poor way of doing type-based dispatch.  Some thoughts:
-# - are we sure that we _always_ want to do type-based dispatch?  the
-#   most flexible way to do this is to have arbritrary predicates, or
-#   a list of functions that return some marker value if they don't
-#   know what to do
-# - clojure does typed-based dispatch, but it has multimethods
-# - if we did type-based dispatch, we could use Python's ABC, I guess.
-# - does it make sense to allow callers to override the behaviour of
-#   the standard types, e.g. to encode bools differently
-# - does it even make sense to allow callers to overwrite the
-#   built-in write handlers?  the current API requires you specify them.
-# - perhaps a global registry wouldn't be such a bad thing?
-
-
-DEFAULT_WRITE_HANDLERS = [
-    (datetime.datetime, tagger(INST, lambda x: x.isoformat())),
-    (uuid.UUID, tagger(UUID, str)),
-]
-
-
 def _get_tag_name(obj):
     tag = getattr(obj, 'tag', None)
     if tag:
@@ -184,9 +158,9 @@ def encode(obj):
     elif isinstance(obj, (frozenset, set)):
         return Set(map(encode, obj))
     elif isinstance(obj, datetime.datetime):
-        return TaggedValue(INST, obj.isoformat())
+        return TaggedValue(INST, String(obj.isoformat()))
     elif isinstance(obj, uuid.UUID):
-        return TaggedValue(UUID, str(obj))
+        return TaggedValue(UUID, String(str(obj)))
     elif isinstance(obj, tuple):
         return List(map(encode, obj))
     elif isinstance(obj, list):
@@ -195,13 +169,5 @@ def encode(obj):
         return obj
 
 
-def dumps(obj, write_handlers=None):
-    if write_handlers is None:
-        write_handlers = DEFAULT_WRITE_HANDLERS
-
-    for base_type, function in write_handlers:
-        if isinstance(obj, base_type):
-            obj = function(obj)
-            break
-
-    return unparse(obj)
+def dumps(obj):
+    return unparse(encode(obj))

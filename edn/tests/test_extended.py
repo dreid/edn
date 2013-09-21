@@ -7,7 +7,6 @@ import iso8601
 from perfidy import frozendict
 
 from edn import (
-    DEFAULT_WRITE_HANDLERS,
     dumps,
     loads,
 )
@@ -169,13 +168,13 @@ class EncoderTests(unittest.TestCase):
         # XXX: Maybe give Symbol a makeTag method, so that
         # INST.makeTag("2013-...") works?
         self.assertEqual(
-            TaggedValue(INST, "2013-12-25T19:32:55+00:00"),
+            TaggedValue(INST, String("2013-12-25T19:32:55+00:00")),
             encode(datetime.datetime(2013, 12, 25, 19, 32, 55,
                                      tzinfo=iso8601.iso8601.UTC)))
 
     def test_uuid(self):
         uid = uuid.uuid4()
-        self.assertEqual(TaggedValue(UUID, str(uid)), encode(uid))
+        self.assertEqual(TaggedValue(UUID, String(str(uid))), encode(uid))
 
     def test_nested_map(self):
         data = {'foo': 'bar'}
@@ -200,8 +199,7 @@ class EncoderTests(unittest.TestCase):
         self.assertEqual(List((String('foo'), String('bar'))), encoded)
 
 
-class DumpsTestCase(object):
-    # DISABLED for now
+class DumpsTestCase(unittest.TestCase):
 
     def test_datetime(self):
         sometime = datetime.datetime(
@@ -226,15 +224,3 @@ class DumpsTestCase(object):
         foo = namedtuple('foo', 'x y')
         a = foo(1, 2)
         self.assertEqual('(1 2)', dumps(a))
-
-    def test_custom_handler(self):
-        foo = namedtuple('foo', 'x y')
-        handler = lambda x: TaggedValue(Symbol('foo'), (x.x, x.y))
-        handlers = DEFAULT_WRITE_HANDLERS + [(foo, handler)]
-        self.assertEqual('#foo (2 3)', dumps(foo(2, 3), handlers))
-
-    def test_nested_custom_handler(self):
-        foo = namedtuple('foo', 'x y')
-        handler = lambda x: TaggedValue(Symbol('foo'), (x.x, x.y))
-        handlers = DEFAULT_WRITE_HANDLERS + [(foo, handler)]
-        self.assertEqual('(#foo (2 3))', dumps([foo(2, 3)], handlers))

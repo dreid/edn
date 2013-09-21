@@ -13,10 +13,8 @@ from ._ast import (
     parse,
 )
 from ._extended import (
-    DEFAULT_WRITE_HANDLERS,
     INST,
     UUID,
     dumps,
     loads,
-    tagger,
 )
