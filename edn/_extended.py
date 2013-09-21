@@ -135,7 +135,8 @@ def encode(obj, writers=()):
         ((str, unicode), String),
         ((dict, frozendict),
          lambda x: Map(
-             [(encode(k, writers), encode(v, writers)) for k, v in obj.items()])),
+             [(encode(k, writers), encode(v, writers))
+              for k, v in obj.items()])),
         ((set, frozenset), lambda obj: Set([encode(x, writers) for x in obj])),
         (tuple, lambda obj: List([encode(x, writers) for x in obj])),
         (list,  lambda obj: Vector([encode(x, writers) for x in obj])),
@@ -158,5 +159,5 @@ def encode(obj, writers=()):
         return obj
 
 
-def dumps(obj):
-    return unparse(encode(obj))
+def dumps(obj, writers=()):
+    return unparse(encode(obj, writers))

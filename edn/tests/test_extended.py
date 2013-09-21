@@ -236,3 +236,9 @@ class DumpsTestCase(unittest.TestCase):
 
     def test_escaped_string(self):
         self.assertEqual('"foo\\nbar"', dumps('foo\nbar'))
+
+    def test_custom_writer(self):
+        point = namedtuple('point', 'x y')
+        writer = lambda p: (p.x, p.y)
+        output = dumps(point(2, 3), [(point, Symbol('point'), writer)])
+        self.assertEqual('#point (2 3)', output)
