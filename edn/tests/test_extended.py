@@ -143,6 +143,61 @@ class EncoderTests(unittest.TestCase):
 
     def test_string(self):
         self.assertEqual(String(u"foo"), encode(u"foo"))
+        self.assertEqual(String("foo"), encode("foo"))
+
+    def test_symbol(self):
+        self.assertEqual(Symbol("foo"), encode(Symbol("foo")))
+
+    def test_keyword(self):
+        self.assertEqual(
+            Keyword(Symbol("foo")), encode(Keyword(Symbol("foo"))))
+
+    def test_map(self):
+        self.assertEqual(Map(((1, 2), (3, 4))), encode({1: 2, 3: 4}))
+        self.assertEqual(
+            Map(((1, 2), (3, 4))), encode(frozendict({1: 2, 3: 4})))
+
+    def test_set(self):
+        self.assertEqual(Set((1, 2, 3)), encode(frozenset([1, 2, 3])))
+        self.assertEqual(Set((1, 2, 3)), encode(set([1, 2, 3])))
+
+    def test_tuple(self):
+        self.assertEqual(List((1, 2, 3)), encode((1, 2, 3)))
+        self.assertEqual(Vector((1, 2, 3)), encode([1, 2, 3]))
+
+    def test_datetime(self):
+        # XXX: Maybe give Symbol a makeTag method, so that
+        # INST.makeTag("2013-...") works?
+        self.assertEqual(
+            TaggedValue(INST, "2013-12-25T19:32:55+00:00"),
+            encode(datetime.datetime(2013, 12, 25, 19, 32, 55,
+                                     tzinfo=iso8601.iso8601.UTC)))
+
+    def test_uuid(self):
+        uid = uuid.uuid4()
+        self.assertEqual(TaggedValue(UUID, str(uid)), encode(uid))
+
+    def test_nested_map(self):
+        data = {'foo': 'bar'}
+        encoded = encode(data)
+        self.assertEqual(Map(((String('foo'), String('bar')),)), encoded)
+
+    def test_nested_set(self):
+        data = set([(1,), (2,)])
+        encoded = encode(data)
+        self.assertIn(
+            encoded, (Set((List([1]), List([2]))),
+                      Set((List([2]), List([1])))))
+
+    def test_nested_vector(self):
+        data = [[1], [2]]
+        encoded = encode(data)
+        self.assertEqual(encoded, Vector((Vector([1]), Vector([2]))))
+
+    def test_nested_list(self):
+        data = ("foo", "bar")
+        encoded = encode(data)
+        self.assertEqual(List((String('foo'), String('bar'))), encoded)
 
 
 class DumpsTestCase(object):

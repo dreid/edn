@@ -6,8 +6,13 @@ from perfidy import frozendict
 
 from ._ast import (
     Keyword,
+    List,
+    Map,
+    Set,
+    String,
     Symbol,
     TaggedValue,
+    Vector,
     parse,
     unparse,
 )
@@ -158,9 +163,36 @@ DEFAULT_WRITE_HANDLERS = [
 ]
 
 
+def _get_tag_name(obj):
+    tag = getattr(obj, 'tag', None)
+    if tag:
+        return getattr(tag, 'name', None)
+
+
 def encode(obj):
     """Take a Python object and return an edn AST."""
-    pass
+    # TODO(jml): Handle custom writers
+    # TODO(jml): Use a frozendict rather than if/else
+    # TODO(jml): Possibly refactor to separate Python object traversal
+    if _get_tag_name(obj) in ('Keyword', 'Symbol'):
+        return obj
+    elif isinstance(obj, (str, unicode)):
+        return String(obj)
+    # XXX: Why not just 'things with items'?
+    elif isinstance(obj, (dict, frozendict)):
+        return Map([(encode(k), encode(v)) for k, v in obj.items()])
+    elif isinstance(obj, (frozenset, set)):
+        return Set(map(encode, obj))
+    elif isinstance(obj, datetime.datetime):
+        return TaggedValue(INST, obj.isoformat())
+    elif isinstance(obj, uuid.UUID):
+        return TaggedValue(UUID, str(obj))
+    elif isinstance(obj, tuple):
+        return List(map(encode, obj))
+    elif isinstance(obj, list):
+        return Vector(map(encode, obj))
+    else:
+        return obj
 
 
 def dumps(obj, write_handlers=None):
