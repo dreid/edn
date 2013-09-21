@@ -2,7 +2,10 @@ import datetime
 import uuid
 
 import iso8601
-from perfidy import frozendict
+from perfidy import (
+    caller,
+    frozendict,
+)
 
 from ._ast import (
     Keyword,
@@ -126,20 +129,28 @@ _BASE_ENCODING_RULES = (
     ((set, frozenset), lambda obj: Set(map(encode, obj))),
     (tuple, lambda obj: List(map(encode, obj))),
     (list,  lambda obj: Vector(map(encode, obj))),
-    (datetime.datetime,
-     lambda obj: TaggedValue(INST, String(obj.isoformat()))),
-    (uuid.UUID,
-     lambda obj: TaggedValue(UUID, String(str(obj)))),
 )
+
+DEFAULT_WRITERS = (
+    (datetime.datetime, INST, caller('isoformat')),
+    (uuid.UUID, UUID, str),
+)
+
+
+def _make_tag_rule(tag, writer):
+    return lambda obj: TaggedValue(tag, encode(writer(obj)))
 
 
 def encode(obj):
     """Take a Python object and return an edn AST."""
+    rules = tuple(
+        (base_types, _make_tag_rule(tag, writer))
+        for base_types, tag, writer in DEFAULT_WRITERS) + _BASE_ENCODING_RULES
     # Separate logic since we can't do isinstance checks on these.
     if _get_tag_name(obj) in ('Keyword', 'Symbol'):
         return obj
     else:
-        for base_types, encoder in _BASE_ENCODING_RULES:
+        for base_types, encoder in rules:
             if isinstance(obj, base_types):
                 return encoder(obj)
         # For unknown types, just return the object and hope for the best.
