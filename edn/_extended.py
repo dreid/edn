@@ -143,29 +143,41 @@ def _get_tag_name(obj):
         return getattr(tag, 'name', None)
 
 
+def _encode_map(obj):
+    return Map([(encode(k), encode(v)) for k, v in obj.items()])
+
+
+# Basic mapping from core Python types to edn AST elements
+# Also includes logic on how to traverse down.
+_BASE_ENCODING_RULES = (
+    ((str, unicode), String),
+    ((dict, frozendict), _encode_map),
+    ((set, frozenset), lambda obj: Set(map(encode, obj))),
+    (tuple, lambda obj: List(map(encode, obj))),
+    (list,  lambda obj: Vector(map(encode, obj))),
+    (datetime.datetime,
+     lambda obj: TaggedValue(INST, String(obj.isoformat()))),
+    (uuid.UUID,
+     lambda obj: TaggedValue(UUID, String(str(obj)))),
+)
+
+
 def encode(obj):
     """Take a Python object and return an edn AST."""
     # TODO(jml): Handle custom writers
     # TODO(jml): Use a frozendict rather than if/else
     # TODO(jml): Possibly refactor to separate Python object traversal
+    # Separate logic since we can't do isinstance checks on these.
     if _get_tag_name(obj) in ('Keyword', 'Symbol'):
         return obj
-    elif isinstance(obj, (str, unicode)):
-        return String(obj)
-    # XXX: Why not just 'things with items'?
-    elif isinstance(obj, (dict, frozendict)):
-        return Map([(encode(k), encode(v)) for k, v in obj.items()])
-    elif isinstance(obj, (frozenset, set)):
-        return Set(map(encode, obj))
-    elif isinstance(obj, datetime.datetime):
-        return TaggedValue(INST, String(obj.isoformat()))
-    elif isinstance(obj, uuid.UUID):
-        return TaggedValue(UUID, String(str(obj)))
-    elif isinstance(obj, tuple):
-        return List(map(encode, obj))
-    elif isinstance(obj, list):
-        return Vector(map(encode, obj))
     else:
+        for base_types, encoder in _BASE_ENCODING_RULES:
+            if isinstance(obj, base_types):
+                return encoder(obj)
+        # For unknown types, just return the object and hope for the best.
+        #
+        # XXX: Perhaps create an unknown_handler, and also base rules for
+        # encoding supported types like int, float, and so forth.
         return obj
 
 
