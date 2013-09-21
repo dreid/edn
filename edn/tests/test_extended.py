@@ -7,11 +7,8 @@ import iso8601
 from perfidy import frozendict
 
 from edn import (
-    dumps,
-    loads,
-)
-from edn._ast import (
     Character,
+    INST,
     Keyword,
     List,
     Map,
@@ -19,13 +16,14 @@ from edn._ast import (
     String,
     Symbol,
     TaggedValue,
+    UUID,
     Vector,
+    dumps,
+    loads,
 )
 from edn._extended import (
     decode,
     encode,
-    INST,
-    UUID,
 )
 
 
