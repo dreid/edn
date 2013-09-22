@@ -12,6 +12,7 @@ from edn import (
     Keyword,
     List,
     Map,
+    Nil,
     Set,
     String,
     Symbol,
@@ -43,7 +44,7 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual('f', decode(Character('f')))
 
     def test_none(self):
-        self.assertEqual(None, decode(None))
+        self.assertEqual(None, decode(Nil))
 
     def test_vector(self):
         self.assertEqual((1, 2, 3), decode(Vector((1, 2, 3))))
@@ -139,8 +140,8 @@ class LoadsTestCase(unittest.TestCase):
 class EncoderTests(unittest.TestCase):
 
     def test_none(self):
-        self.assertEqual(None, encode(None))
-        self.assertEqual(List((String('b'), None)), encode(('b', None)))
+        self.assertEqual(Nil, encode(None))
+        self.assertEqual(List((String('b'), Nil)), encode(('b', None)))
 
     def test_string(self):
         self.assertEqual(String(u"foo"), encode(u"foo"))

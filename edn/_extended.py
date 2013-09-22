@@ -11,6 +11,7 @@ from ._ast import (
     Keyword,
     List,
     Map,
+    Nil,
     Set,
     String,
     Symbol,
@@ -32,6 +33,7 @@ _DECODERS = frozendict({
     'Vector': tuple,
     'List': tuple,
     'Map': frozendict,
+    'Nil': constantly(None),
     'Set': frozenset,
     'Symbol': Symbol,
     'Keyword': Keyword,
@@ -140,6 +142,7 @@ def encode(obj, writers=()):
         ((set, frozenset), lambda obj: Set([encode(x, writers) for x in obj])),
         (tuple, lambda obj: List([encode(x, writers) for x in obj])),
         (list,  lambda obj: Vector([encode(x, writers) for x in obj])),
+        (type(None), constantly(Nil)),
     )
 
     rules = (

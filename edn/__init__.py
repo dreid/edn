@@ -3,6 +3,7 @@ from ._ast import (
     Keyword,
     List,
     Map,
+    Nil,
     Set,
     String,
     Symbol,

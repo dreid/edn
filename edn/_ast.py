@@ -9,6 +9,7 @@ Character = t.Character
 Keyword = t.Keyword
 List = t.List
 Map = t.Map
+Nil = t.Nil()
 Set = t.Set
 String = t.String
 Symbol = t.Symbol
@@ -29,6 +30,7 @@ edn = makeGrammar(
         'Vector': Vector,
         'TaggedValue': TaggedValue,
         'Map': Map,
+        'Nil': Nil,
         'Set': Set,
         'List': List,
     },
@@ -65,7 +67,7 @@ class _Builder(object):
     def _dump_false(self, obj):
         return 'false'
 
-    def _dump_null(self, obj):
+    def _dump_Nil(self, obj):
         return 'nil'
 
     def _dump_Character(self, obj):

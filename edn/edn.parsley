@@ -68,7 +68,7 @@ consumable = (ws | discard | comment)*
 # `nil` represents nil, null or nothing. It should be read as an object with similar meaning on the
 # target platform.
 
-nil = 'nil' -> None
+nil = 'nil' -> Nil
 
 # ### booleans
 #

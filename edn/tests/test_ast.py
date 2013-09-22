@@ -5,6 +5,7 @@ from edn import (
     List,
     Keyword,
     Map,
+    Nil,
     Set,
     String,
     Symbol,
@@ -18,7 +19,7 @@ from edn import (
 
 class EDNTestCase(unittest.TestCase):
     def test_nil(self):
-        self.assertEqual(edn("nil").nil(), None)
+        self.assertEqual(edn("nil").nil(), Nil)
 
     def test_boolean(self):
         self.assertTrue(edn("true").boolean())
@@ -134,8 +135,8 @@ class ParseTestCase(unittest.TestCase):
 class UnparseTestCase(unittest.TestCase):
 
     def test_nil(self):
-        self.assertEqual('nil', unparse(None))
-        self.assertEqual('("b" nil)', unparse(List((String('b'), None))))
+        self.assertEqual('nil', unparse(Nil))
+        self.assertEqual('("b" nil)', unparse(List((String('b'), Nil))))
 
     def test_integer(self):
         self.assertEqual('1', unparse(1))
