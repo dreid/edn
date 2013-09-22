@@ -250,3 +250,30 @@ class DumpsTestCase(unittest.TestCase):
     def test_null(self):
         self.assertEqual('nil', dumps(None))
         self.assertEqual('("b" nil)', dumps(('b', None)))
+
+    def test_complex(self):
+        writers = (
+            (datetime.date, Symbol('day'), lambda x: x.strftime('%Y-%m-%d')),
+        )
+        uid = uuid.uuid4()
+        data = [
+            ('username', "joe.random"),
+            ('time_finished', datetime.date(2013, 9, 21)),
+            ('specified_end_date', None),
+            ('time_started', datetime.date(2013, 9, 21)),
+            ('end_date', datetime.date(2013, 9, 21)),
+            ('data_file', "/tmp/path/output/%s" % (str(uid,))),
+            ("specified_start_date", None),
+            ("start_date", datetime.date(2013, 9, 1)),
+            ("id", str(uid)),
+            ("foo", "bar"),
+        ]
+        expected = (
+            '[("username" "joe.random") ("time_finished" #day "2013-09-21") '
+            '("specified_end_date" nil) ("time_started" #day "2013-09-21") '
+            '("end_date" #day "2013-09-21") '
+            '("data_file" "/tmp/path/output/%s") '
+            '("specified_start_date" nil) ("start_date" #day "2013-09-01") '
+            '("id" "%s") ("foo" "bar")]'
+        ) % (str(uid), str(uid))
+        self.assertEqual(expected, dumps(data, writers))
