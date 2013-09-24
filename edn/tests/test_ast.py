@@ -72,6 +72,7 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
 
     def test_float(self):
         floats = (
+            # XXX: How do you do 'exact precision' in Python?
             ('4M', 4.0),
             ('3.2', 3.2),
             ('+4.7', 4.7),
