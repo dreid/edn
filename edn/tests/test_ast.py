@@ -1,5 +1,7 @@
 import unittest
 
+from parsley import ParseError
+
 from edn import (
     Character,
     List,
@@ -67,6 +69,23 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
 
         for edn_str, expected in integers:
             self.assertEqual(edn(edn_str).integer(), expected)
+
+    def test_float(self):
+        floats = (
+            ('4M', 4.0),
+            ('3.2', 3.2),
+            ('+4.7', 4.7),
+            ('-11.8', -11.8),
+            ('-11.8e2', -1180.0),
+            ('97.4E-02', 0.974),
+        )
+        for edn_str, expected in floats:
+            self.assertEqual(edn(edn_str).float(), expected)
+
+    def test_bad_floats(self):
+        floats = ('04M', '04.51', '-023.0')
+        for string in floats:
+            self.assertRaises(ParseError, edn(string).float)
 
     def test_list(self):
         lists = [
