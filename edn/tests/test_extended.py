@@ -139,6 +139,10 @@ class LoadsTestCase(unittest.TestCase):
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
 
+    def test_numbers(self):
+        self.assertEqual(4.2, loads('4.2'))
+        self.assertEqual((Symbol('amount'), -11.4), loads('[amount -11.4]'))
+
 
 class EncoderTests(unittest.TestCase):
 

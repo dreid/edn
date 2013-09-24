@@ -202,7 +202,7 @@ nonzero_digit = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 int_part = sign (nonzero_digit digit+ | digit)
 frac = '.' digit+
 exp = ('e' | 'E') sign digit+
-float = <int_part (frac exp | exp | frac)?>:f 'M'? -> float(f)
+float = <int_part>:f 'M' | <int_part (frac exp | exp | frac)>:f 'M'? -> float(f)
 
 #
 # ### lists
@@ -214,7 +214,7 @@ float = <int_part (frac exp | exp | frac)?>:f 'M'? -> float(f)
 #
 
 datum = symbol
-        | keyword | boolean | nil | integer | string | character | list
+        | keyword | boolean | nil | float | integer | string | character | list
         | vector | map | set | tag
 
 edn = consumable datum:d consumable -> d
