@@ -34,8 +34,11 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(True, decode(True))
         self.assertEqual(False, decode(False))
 
-    def test_int(self):
+    def test_numbers(self):
         self.assertEqual(42, decode(42))
+        self.assertEqual(42.3, decode(42.3))
+        self.assertEqual(-42.3, decode(-42.3))
+        self.assertEqual(-42.3e3, decode(-42.3e3))
 
     def test_string(self):
         self.assertEqual("foo", decode(String("foo")))
