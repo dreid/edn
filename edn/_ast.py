@@ -1,3 +1,5 @@
+"""Abstract syntax for edn."""
+
 from functools import partial
 import os
 
@@ -38,14 +40,11 @@ edn = makeGrammar(
 
 
 def parse(string):
+    """Parse a single edn element.
+
+    Returns an abstract representation of a single edn element.
+    """
     return edn(string).edn()
-
-
-def _dump_bool(obj):
-    if obj:
-        return 'true'
-    else:
-        return 'false'
 
 
 def _wrap(start, end, middle):
@@ -129,5 +128,9 @@ class _Builder(object):
 
 
 def unparse(obj):
+    """Turn an abstract edn element into a string.
+
+    Returns a valid edn string representing 'obj'.
+    """
     builder = _Builder()
     return coerceToTerm(obj).build(builder)
