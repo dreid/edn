@@ -173,5 +173,5 @@ def to_terms(obj, writers=(), default=_default_handler):
         return to_terms(default(obj), writers, default)
 
 
-def dumps(obj, writers=()):
-    return unparse(to_terms(obj, writers))
+def dumps(obj, writers=(), default=_default_handler):
+    return unparse(to_terms(obj, writers, default))

@@ -139,14 +139,15 @@ class LoadsTestCase(unittest.TestCase):
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
 
 
-class EncoderTests(unittest.TestCase):
+class Custom(object):
+    """Used in tests as an unrecognized object."""
+    def __init__(self, x):
+        self.x = x
+    def __repr__(self):
+        return '<Custom(%s)>' % (self.x,)
 
-    class Custom(object):
-        """Used in tests as an unrecognized object."""
-        def __init__(self, x):
-            self.x = x
-        def __repr__(self):
-            return '<Custom(%s)>' % (self.x,)
+
+class EncoderTests(unittest.TestCase):
 
     def test_bool(self):
         self.assertEqual(True, to_terms(True))
@@ -229,14 +230,14 @@ class EncoderTests(unittest.TestCase):
             Map(((1, TaggedValue(Symbol('point'), List((2, 3)))),)), encoded)
 
     def test_unknown_type(self):
-        self.assertRaises(ValueError, to_terms, self.Custom(42))
+        self.assertRaises(ValueError, to_terms, Custom(42))
 
     def test_unknown_type_handler(self):
-        result = to_terms(self.Custom(42), default=repr)
+        result = to_terms(Custom(42), default=repr)
         self.assertEqual(String("<Custom(42)>"), result)
 
     def test_nested_unknown_type_handler(self):
-        result = to_terms([self.Custom(42)], default=repr)
+        result = to_terms([Custom(42)], default=repr)
         self.assertEqual(Vector([String("<Custom(42)>")]), result)
 
 
@@ -274,6 +275,10 @@ class DumpsTestCase(unittest.TestCase):
         writer = lambda p: (p.x, p.y)
         output = dumps(point(2, 3), [(point, Symbol('point'), writer)])
         self.assertEqual('#point (2 3)', output)
+
+    def test_unknown_handler(self):
+        output = dumps(Custom(42), default=repr)
+        self.assertEqual('"<Custom(42)>"', output)
 
     def test_null(self):
         self.assertEqual('nil', dumps(None))
