@@ -133,7 +133,11 @@ DEFAULT_WRITERS = (
 )
 
 
-def to_terms(obj, writers=()):
+def _default_handler(obj):
+    raise ValueError("Cannot convert %r to edn" % (obj,))
+
+
+def to_terms(obj, writers=(), default=_default_handler):
     """Take a Python object and return an edn AST."""
     # Basic mapping from core Python types to edn AST elements
     # Also includes logic on how to traverse down.
@@ -144,11 +148,11 @@ def to_terms(obj, writers=()):
         ((str, unicode), String),
         ((dict, frozendict),
          lambda x: Map(
-             [(to_terms(k, writers), to_terms(v, writers))
+             [(to_terms(k, writers, default), to_terms(v, writers, default))
               for k, v in obj.items()])),
-        ((set, frozenset), lambda obj: Set([to_terms(x, writers) for x in obj])),
-        (tuple, lambda obj: List([to_terms(x, writers) for x in obj])),
-        (list,  lambda obj: Vector([to_terms(x, writers) for x in obj])),
+        ((set, frozenset), lambda obj: Set([to_terms(x, writers, default) for x in obj])),
+        (tuple, lambda obj: List([to_terms(x, writers, default) for x in obj])),
+        (list,  lambda obj: Vector([to_terms(x, writers, default) for x in obj])),
         (type(None), constantly(Nil)),
         ((int, float), identity),
     )
@@ -166,8 +170,7 @@ def to_terms(obj, writers=()):
         for base_types, encoder in rules:
             if isinstance(obj, base_types):
                 return encoder(obj)
-        # For unknown types, just return the object and hope for the best.
-        raise ValueError("Cannot convert %r to edn" % (obj,))
+        return to_terms(default(obj), writers, default)
 
 
 def dumps(obj, writers=()):
