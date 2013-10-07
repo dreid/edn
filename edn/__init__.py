@@ -1,12 +1,8 @@
-from ._edn import (
-    Symbol,
+from ._ast import (
     Keyword,
-    Vector,
-    TaggedValue,
-    INST,
-    UUID,
+    Symbol,
+)
+from ._extended import (
     dumps,
-    edn,
     loads,
-    make_tagged_value,
 )

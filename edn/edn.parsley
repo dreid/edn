@@ -68,7 +68,7 @@ consumable = (ws | discard | comment)*
 # `nil` represents nil, null or nothing. It should be read as an object with similar meaning on the
 # target platform.
 
-nil = 'nil' -> None
+nil = 'nil' -> Nil
 
 # ### booleans
 #
@@ -99,7 +99,7 @@ escaped_characters = '\\' ('"' -> '"'
 
 punctuation = '.' | '*' | '+' | '!' | '-' | '_' | '?' | '$' | '%' | '&' | '='
 string = '"' (escaped_characters | ~('"') anything)*:c '"'
-         -> ''.join(c).decode('utf8')
+         -> String(''.join(c).decode('utf8'))
 
 # ### characters
 #
@@ -114,7 +114,8 @@ character = '\\' ('"' -> '"'
                  |letter
                  |digit
                  |punctuation
-                 | '(' | ')' | '{' | '}' | '[' | ']' | '=' | '~')
+                 | '(' | ')' | '{' | '}' | '[' | ']' | '=' | '~'):c
+            -> Character(c)
 
 # ### symbols
 #
@@ -152,7 +153,7 @@ symbol = prefixed_symbol | simple_symbol
 # If the target platform supports some notion of interning, it is a further semantic of keywords that
 # all instances of the same keyword yield the identical object.
 
-keyword = ':' prefixed_symbol:s | ':' simple_symbol:s -> Keyword(s)
+keyword = (':' prefixed_symbol:s | ':' simple_symbol:s) -> Keyword(s)
 
 # ### integers
 #
@@ -212,7 +213,7 @@ edn = consumable datum:d consumable -> d
 
 elem = consumable datum:v consumable -> v
 
-list = '(' elem*:elems ')' -> tuple(elems)
+list = '(' elem*:elems ')' -> List(elems)
 
 # ### vectors
 #
@@ -238,7 +239,7 @@ vector = '[' elem*:elems ']' -> Vector(elems)
 
 pair = datum:k consumable datum:v -> (k, v)
 members = (pair:first (consumable pair)*:rest -> [first] + rest) | -> []
-map = '{' consumable members:m consumable '}' -> dict(m)
+map = '{' consumable members:m consumable '}' -> Map(m)
 
 # ### sets
 #
@@ -249,7 +250,7 @@ map = '{' consumable members:m consumable '}' -> dict(m)
 #     #{a b [1 2 3]}
 #
 
-set = '#{' elem*:elems '}' -> frozenset(elems)
+set = '#{' elem*:elems '}' -> Set(elems)
 
 # ## tagged elements
 #
