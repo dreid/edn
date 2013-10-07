@@ -144,15 +144,16 @@ def to_terms(obj, writers=(), default=_default_handler):
     #
     # We can't define these externally yet because the definitions need to
     # refer to this function, along with custom writers.
+    def recurse(x):
+        return to_terms(x, writers, default)
+
     _base_encoding_rules = (
         ((str, unicode), String),
         ((dict, frozendict),
-         lambda x: Map(
-             [(to_terms(k, writers, default), to_terms(v, writers, default))
-              for k, v in obj.items()])),
-        ((set, frozenset), lambda obj: Set([to_terms(x, writers, default) for x in obj])),
-        (tuple, lambda obj: List([to_terms(x, writers, default) for x in obj])),
-        (list,  lambda obj: Vector([to_terms(x, writers, default) for x in obj])),
+         lambda x: Map([(recurse(k), recurse(v)) for k, v in obj.items()])),
+        ((set, frozenset), lambda obj: Set(map(recurse, obj))),
+        (tuple, lambda obj: List(map(recurse, obj))),
+        (list,  lambda obj: Vector(map(recurse, obj))),
         (type(None), constantly(Nil)),
         ((int, float), identity),
     )
@@ -170,7 +171,7 @@ def to_terms(obj, writers=(), default=_default_handler):
         for base_types, encoder in rules:
             if isinstance(obj, base_types):
                 return encoder(obj)
-        return to_terms(default(obj), writers, default)
+        return recurse(default(obj))
 
 
 def dumps(obj, writers=(), default=_default_handler):
