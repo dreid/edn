@@ -1,3 +1,14 @@
+"""Turns edn ASTs into Python objects and back.
+
+An edn AST is a terml term that looks something like::
+
+  Vector((String(u'foo'), String(u'bar'), 43))
+
+Which can be turned into a Python object::
+
+  [u"foo", u"bar", 43]
+"""
+
 import datetime
 import uuid
 
@@ -94,7 +105,8 @@ def from_terms(term, readers=frozendict(), default=None):
         called with 'bar'.  There are default readers for #inst and #uuid,
         which can be overridden here.
     :param default: callable taking a symbol & value that's called when
-        there's no tag symbol in the reader.
+        there's no tag symbol in the reader.  It gets the symbol and the
+        interpreted value, and can return whatever Python object it pleases.
     :return: Whatever term gets decoded to.
     """
     builder = _Decoder(_DECODERS, DEFAULT_READERS.merge(readers), default)
@@ -107,12 +119,17 @@ def from_terms(term, readers=frozendict(), default=None):
 def loads(string, readers=frozendict(), default=None):
     """Interpret an edn string.
 
-    :param term: A parsed edn term, probably got from `edn.parse`.
+    See https://github.com/edn-format/edn.
+
+    :param string: A UTF-8 encoded string containing edn data.
     :param readers: A map from tag symbols to callables.  For '#foo bar'
         whatever callable the Symbol('foo') key is mapped to will be
         called with 'bar'.  There are default readers for #inst and #uuid,
         which can be overridden here.
-    :return: Whatever the string is interpreted as.
+    :param default: Called whenever we come across a tagged value that is not
+        mentioned in `readers'.  It gets the symbol and the interpreted value,
+        and whatever it returns is how that value will be interpreted.
+    :return: A Python object representing the edn element.
     """
     return from_terms(parse(string), readers, default)
 
