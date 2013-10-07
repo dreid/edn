@@ -81,7 +81,7 @@ class _Decoder(object):
         return f(*terms)
 
 
-def decode(term, readers=frozendict(), default=None):
+def from_terms(term, readers=frozendict(), default=None):
     """Take a parsed edn term and return a useful Python object.
 
     :param term: A parsed edn term, probably got from `edn.parse`.
@@ -110,7 +110,7 @@ def loads(string, readers=frozendict(), default=None):
         which can be overridden here.
     :return: Whatever the string is interpreted as.
     """
-    return decode(parse(string), readers, default)
+    return from_terms(parse(string), readers, default)
 
 
 def _get_tag_name(obj):
@@ -120,7 +120,7 @@ def _get_tag_name(obj):
 
 
 def _make_tag_rule(tag, writer):
-    return lambda obj: TaggedValue(tag, encode(writer(obj)))
+    return lambda obj: TaggedValue(tag, to_terms(writer(obj)))
 
 
 DEFAULT_WRITERS = (
@@ -129,7 +129,7 @@ DEFAULT_WRITERS = (
 )
 
 
-def encode(obj, writers=()):
+def to_terms(obj, writers=()):
     """Take a Python object and return an edn AST."""
     # Basic mapping from core Python types to edn AST elements
     # Also includes logic on how to traverse down.
@@ -137,11 +137,11 @@ def encode(obj, writers=()):
         ((str, unicode), String),
         ((dict, frozendict),
          lambda x: Map(
-             [(encode(k, writers), encode(v, writers))
+             [(to_terms(k, writers), to_terms(v, writers))
               for k, v in obj.items()])),
-        ((set, frozenset), lambda obj: Set([encode(x, writers) for x in obj])),
-        (tuple, lambda obj: List([encode(x, writers) for x in obj])),
-        (list,  lambda obj: Vector([encode(x, writers) for x in obj])),
+        ((set, frozenset), lambda obj: Set([to_terms(x, writers) for x in obj])),
+        (tuple, lambda obj: List([to_terms(x, writers) for x in obj])),
+        (list,  lambda obj: Vector([to_terms(x, writers) for x in obj])),
         (type(None), constantly(Nil)),
     )
 
@@ -163,4 +163,4 @@ def encode(obj, writers=()):
 
 
 def dumps(obj, writers=()):
-    return unparse(encode(obj, writers))
+    return unparse(to_terms(obj, writers))
