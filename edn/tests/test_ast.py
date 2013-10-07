@@ -1,6 +1,6 @@
 import unittest
 
-from edn import (
+from .._ast import (
     Character,
     List,
     Keyword,
