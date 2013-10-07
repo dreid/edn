@@ -1,4 +1,20 @@
-"""Abstract syntax for edn."""
+"""Abstract syntax for edn.
+
+Roughly speaking, every edn element gets its own terml symbol.  Thus, an edn
+stream consisting of a vector of two strings, e.g.::
+
+  ["foo" "bar"]
+
+Will be mapped to::
+
+  Vector((String(u'foo'), String(u'bar')))
+
+Beyond that::
+
+  #foo 42 <=> TaggedValue(Symbol('foo'), 42)
+  :my/keyword <=> Keyword(Symbol('keyword', 'my'))
+  my/symbol <=> Symbol('symbol', 'my')
+"""
 
 from functools import partial
 import os

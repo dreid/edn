@@ -2,7 +2,7 @@ import unittest
 
 from parsley import ParseError
 
-from edn import (
+from .._ast import (
     Character,
     List,
     Keyword,

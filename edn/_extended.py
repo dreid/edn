@@ -1,3 +1,14 @@
+"""Turns edn ASTs into Python objects and back.
+
+An edn AST is a terml term that looks something like::
+
+  Vector((String(u'foo'), String(u'bar'), 43))
+
+Which can be turned into a Python object::
+
+  [u"foo", u"bar", 43]
+"""
+
 import datetime
 import uuid
 
@@ -20,6 +31,10 @@ from ._ast import (
     parse,
     unparse,
 )
+
+
+def identity(x):
+    return x
 
 
 def constantly(x):
@@ -81,7 +96,7 @@ class _Decoder(object):
         return f(*terms)
 
 
-def decode(term, readers=frozendict(), default=None):
+def from_terms(term, readers=frozendict(), default=None):
     """Take a parsed edn term and return a useful Python object.
 
     :param term: A parsed edn term, probably got from `edn.parse`.
@@ -90,7 +105,8 @@ def decode(term, readers=frozendict(), default=None):
         called with 'bar'.  There are default readers for #inst and #uuid,
         which can be overridden here.
     :param default: callable taking a symbol & value that's called when
-        there's no tag symbol in the reader.
+        there's no tag symbol in the reader.  It gets the symbol and the
+        interpreted value, and can return whatever Python object it pleases.
     :return: Whatever term gets decoded to.
     """
     builder = _Decoder(_DECODERS, DEFAULT_READERS.merge(readers), default)
@@ -103,14 +119,19 @@ def decode(term, readers=frozendict(), default=None):
 def loads(string, readers=frozendict(), default=None):
     """Interpret an edn string.
 
-    :param term: A parsed edn term, probably got from `edn.parse`.
+    See https://github.com/edn-format/edn.
+
+    :param string: A UTF-8 encoded string containing edn data.
     :param readers: A map from tag symbols to callables.  For '#foo bar'
         whatever callable the Symbol('foo') key is mapped to will be
         called with 'bar'.  There are default readers for #inst and #uuid,
         which can be overridden here.
-    :return: Whatever the string is interpreted as.
+    :param default: Called whenever we come across a tagged value that is not
+        mentioned in `readers'.  It gets the symbol and the interpreted value,
+        and whatever it returns is how that value will be interpreted.
+    :return: A Python object representing the edn element.
     """
-    return decode(parse(string), readers, default)
+    return from_terms(parse(string), readers, default)
 
 
 def _get_tag_name(obj):
@@ -120,7 +141,7 @@ def _get_tag_name(obj):
 
 
 def _make_tag_rule(tag, writer):
-    return lambda obj: TaggedValue(tag, encode(writer(obj)))
+    return lambda obj: TaggedValue(tag, to_terms(writer(obj)))
 
 
 DEFAULT_WRITERS = (
@@ -129,20 +150,29 @@ DEFAULT_WRITERS = (
 )
 
 
-def encode(obj, writers=()):
+def _default_handler(obj):
+    raise ValueError("Cannot convert %r to edn" % (obj,))
+
+
+def to_terms(obj, writers=(), default=_default_handler):
     """Take a Python object and return an edn AST."""
     # Basic mapping from core Python types to edn AST elements
     # Also includes logic on how to traverse down.
+    #
+    # We can't define these externally yet because the definitions need to
+    # refer to this function, along with custom writers.
+    def recurse(x):
+        return to_terms(x, writers, default)
+
     _base_encoding_rules = (
         ((str, unicode), String),
         ((dict, frozendict),
-         lambda x: Map(
-             [(encode(k, writers), encode(v, writers))
-              for k, v in obj.items()])),
-        ((set, frozenset), lambda obj: Set([encode(x, writers) for x in obj])),
-        (tuple, lambda obj: List([encode(x, writers) for x in obj])),
-        (list,  lambda obj: Vector([encode(x, writers) for x in obj])),
+         lambda x: Map([(recurse(k), recurse(v)) for k, v in obj.items()])),
+        ((set, frozenset), lambda obj: Set(map(recurse, obj))),
+        (tuple, lambda obj: List(map(recurse, obj))),
+        (list,  lambda obj: Vector(map(recurse, obj))),
         (type(None), constantly(Nil)),
+        ((int, float), identity),
     )
 
     rules = (
@@ -158,9 +188,8 @@ def encode(obj, writers=()):
         for base_types, encoder in rules:
             if isinstance(obj, base_types):
                 return encoder(obj)
-        # For unknown types, just return the object and hope for the best.
-        return obj
+        return recurse(default(obj))
 
 
-def dumps(obj, writers=()):
-    return unparse(encode(obj, writers))
+def dumps(obj, writers=(), default=_default_handler):
+    return unparse(to_terms(obj, writers, default))

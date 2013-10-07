@@ -7,88 +7,90 @@ import iso8601
 from perfidy import frozendict
 
 from edn import (
-    Character,
-    INST,
+    dumps,
+    loads,
     Keyword,
+    Symbol,
+)
+from .._ast import (
+    Character,
     List,
     Map,
     Nil,
     Set,
     String,
-    Symbol,
     TaggedValue,
-    UUID,
     Vector,
-    dumps,
-    loads,
 )
-from edn._extended import (
-    decode,
-    encode,
+from .._extended import (
+    from_terms,
+    to_terms,
+    INST,
+    UUID,
 )
 
 
 class DecoderTests(unittest.TestCase):
 
     def test_bool(self):
-        self.assertEqual(True, decode(True))
-        self.assertEqual(False, decode(False))
+        self.assertEqual(True, from_terms(True))
+        self.assertEqual(False, from_terms(False))
 
     def test_numbers(self):
-        self.assertEqual(42, decode(42))
-        self.assertEqual(42.3, decode(42.3))
-        self.assertEqual(-42.3, decode(-42.3))
-        self.assertEqual(-42.3e3, decode(-42.3e3))
+        self.assertEqual(42, from_terms(42))
+        self.assertEqual(42.3, from_terms(42.3))
+        self.assertEqual(-42.3, from_terms(-42.3))
+        self.assertEqual(-42.3e3, from_terms(-42.3e3))
 
     def test_string(self):
-        self.assertEqual("foo", decode(String("foo")))
+        self.assertEqual("foo", from_terms(String("foo")))
 
     def test_character(self):
-        self.assertEqual('f', decode(Character('f')))
+        self.assertEqual('f', from_terms(Character('f')))
 
     def test_none(self):
-        self.assertEqual(None, decode(Nil))
+        self.assertEqual(None, from_terms(Nil))
 
     def test_vector(self):
-        self.assertEqual((1, 2, 3), decode(Vector((1, 2, 3))))
+        self.assertEqual((1, 2, 3), from_terms(Vector((1, 2, 3))))
 
     def test_list(self):
-        self.assertEqual((1, 2, 3), decode(List((1, 2, 3))))
+        self.assertEqual((1, 2, 3), from_terms(List((1, 2, 3))))
 
     def test_set(self):
-        self.assertEqual(frozenset((1, 2, 3)), decode(Set((1, 2, 3))))
+        self.assertEqual(frozenset((1, 2, 3)), from_terms(Set((1, 2, 3))))
 
     def test_map(self):
         self.assertEqual(
-            frozendict({1: 2, 3: 4}), decode(Map(((1, 2), (3, 4)))))
+            frozendict({1: 2, 3: 4}), from_terms(Map(((1, 2), (3, 4)))))
 
     def test_symbol(self):
-        self.assertEqual(Symbol('foo'), decode(Symbol('foo')))
+        self.assertEqual(Symbol('foo'), from_terms(Symbol('foo')))
 
     def test_keyword(self):
         self.assertEqual(
-            Keyword(Symbol('foo')), decode(Keyword(Symbol('foo'))))
+            Keyword(Symbol('foo')), from_terms(Keyword(Symbol('foo'))))
 
     def test_tagged_value(self):
         self.assertEqual(
             TaggedValue(Symbol('foo'), 'bar'),
-            decode(TaggedValue(Symbol('foo'), String('bar'))))
+            from_terms(TaggedValue(Symbol('foo'), String('bar'))))
 
     def test_readers(self):
         ast = TaggedValue(Symbol('foo'), String('bar'))
-        result = decode(
+        result = from_terms(
             ast, frozendict({Symbol('foo'): lambda x: list(reversed(x))}))
         self.assertEqual([u'r', u'a', u'b'], result)
 
     def test_default_tagged_value(self):
         handler = lambda s, v: ('default', s, v)
-        result = decode(
+        result = from_terms(
             TaggedValue(Symbol('foo'), String('bar')), default=handler)
         self.assertEqual(('default', Symbol('foo'), u'bar'), result)
 
     def test_inst(self):
         inst = TaggedValue(INST, String("1985-04-12T23:20:50.52Z"))
-        result = decode(inst)
+        result = from_terms(inst)
         self.assertEqual(
             datetime.datetime(
                 1985, 4, 12, 23, 20, 50, 520000, tzinfo=iso8601.iso8601.UTC),
@@ -96,7 +98,7 @@ class DecoderTests(unittest.TestCase):
 
     def test_inst_with_tz(self):
         inst = TaggedValue(INST, String("1985-04-12T23:20:50.52-05:30"))
-        result = decode(inst)
+        result = from_terms(inst)
         expected_tz = iso8601.iso8601.FixedOffset(-5, -30, '-05:30')
         self.assertEqual(
             datetime.datetime(1985, 4, 12, 23, 20, 50, 520000,
@@ -105,7 +107,7 @@ class DecoderTests(unittest.TestCase):
 
     def test_inst_without_fractional(self):
         inst = TaggedValue(INST, String("1985-04-12T23:20:50Z"))
-        result = decode(inst)
+        result = from_terms(inst)
         self.assertEqual(
             datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
             result)
@@ -113,7 +115,7 @@ class DecoderTests(unittest.TestCase):
     def test_uuid(self):
         uid = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
         ast = TaggedValue(UUID, String(uid))
-        self.assertEqual(uuid.UUID(uid), decode(ast))
+        self.assertEqual(uuid.UUID(uid), from_terms(ast))
 
 
 class LoadsTestCase(unittest.TestCase):
@@ -144,80 +146,106 @@ class LoadsTestCase(unittest.TestCase):
         self.assertEqual((Symbol('amount'), -11.4), loads('[amount -11.4]'))
 
 
+class Custom(object):
+    """Used in tests as an unrecognized object."""
+    def __init__(self, x):
+        self.x = x
+    def __repr__(self):
+        return '<Custom(%s)>' % (self.x,)
+
+
 class EncoderTests(unittest.TestCase):
 
+    def test_bool(self):
+        self.assertEqual(True, to_terms(True))
+        self.assertEqual(False, to_terms(False))
+
+    def test_float(self):
+        self.assertEqual(4.2, to_terms(4.2))
+
     def test_none(self):
-        self.assertEqual(Nil, encode(None))
-        self.assertEqual(List((String('b'), Nil)), encode(('b', None)))
+        self.assertEqual(Nil, to_terms(None))
+        self.assertEqual(List((String('b'), Nil)), to_terms(('b', None)))
 
     def test_string(self):
-        self.assertEqual(String(u"foo"), encode(u"foo"))
-        self.assertEqual(String("foo"), encode("foo"))
+        self.assertEqual(String(u"foo"), to_terms(u"foo"))
+        self.assertEqual(String("foo"), to_terms("foo"))
 
     def test_symbol(self):
-        self.assertEqual(Symbol("foo"), encode(Symbol("foo")))
+        self.assertEqual(Symbol("foo"), to_terms(Symbol("foo")))
 
     def test_keyword(self):
         self.assertEqual(
-            Keyword(Symbol("foo")), encode(Keyword(Symbol("foo"))))
+            Keyword(Symbol("foo")), to_terms(Keyword(Symbol("foo"))))
 
     def test_map(self):
-        self.assertEqual(Map(((1, 2), (3, 4))), encode({1: 2, 3: 4}))
+        self.assertEqual(Map(((1, 2), (3, 4))), to_terms({1: 2, 3: 4}))
         self.assertEqual(
-            Map(((1, 2), (3, 4))), encode(frozendict({1: 2, 3: 4})))
+            Map(((1, 2), (3, 4))), to_terms(frozendict({1: 2, 3: 4})))
 
     def test_set(self):
-        self.assertEqual(Set((1, 2, 3)), encode(frozenset([1, 2, 3])))
-        self.assertEqual(Set((1, 2, 3)), encode(set([1, 2, 3])))
+        self.assertEqual(Set((1, 2, 3)), to_terms(frozenset([1, 2, 3])))
+        self.assertEqual(Set((1, 2, 3)), to_terms(set([1, 2, 3])))
 
     def test_tuple(self):
-        self.assertEqual(List((1, 2, 3)), encode((1, 2, 3)))
-        self.assertEqual(Vector((1, 2, 3)), encode([1, 2, 3]))
+        self.assertEqual(List((1, 2, 3)), to_terms((1, 2, 3)))
+        self.assertEqual(Vector((1, 2, 3)), to_terms([1, 2, 3]))
 
     def test_datetime(self):
         self.assertEqual(
             TaggedValue(INST, String("2013-12-25T19:32:55+00:00")),
-            encode(datetime.datetime(2013, 12, 25, 19, 32, 55,
-                                     tzinfo=iso8601.iso8601.UTC)))
+            to_terms(datetime.datetime(2013, 12, 25, 19, 32, 55,
+                                       tzinfo=iso8601.iso8601.UTC)))
 
     def test_uuid(self):
         uid = uuid.uuid4()
-        self.assertEqual(TaggedValue(UUID, String(str(uid))), encode(uid))
+        self.assertEqual(TaggedValue(UUID, String(str(uid))), to_terms(uid))
 
     def test_nested_map(self):
         data = {'foo': 'bar'}
-        encoded = encode(data)
+        encoded = to_terms(data)
         self.assertEqual(Map(((String('foo'), String('bar')),)), encoded)
 
     def test_nested_set(self):
         data = set([(1,), (2,)])
-        encoded = encode(data)
+        encoded = to_terms(data)
         self.assertIn(
             encoded, (Set((List([1]), List([2]))),
                       Set((List([2]), List([1])))))
 
     def test_nested_vector(self):
         data = [[1], [2]]
-        encoded = encode(data)
+        encoded = to_terms(data)
         self.assertEqual(encoded, Vector((Vector([1]), Vector([2]))))
 
     def test_nested_list(self):
         data = ("foo", "bar")
-        encoded = encode(data)
+        encoded = to_terms(data)
         self.assertEqual(List((String('foo'), String('bar'))), encoded)
 
     def test_custom_writer(self):
         point = namedtuple('point', 'x y')
         writer = lambda p: (p.x, p.y)
-        encoded = encode(point(2, 3), [(point, Symbol('point'), writer)])
+        encoded = to_terms(point(2, 3), [(point, Symbol('point'), writer)])
         self.assertEqual(TaggedValue(Symbol('point'), List((2, 3))), encoded)
 
     def test_nested_custom_writer(self):
         point = namedtuple('point', 'x y')
         writer = lambda p: (p.x, p.y)
-        encoded = encode({1: point(2, 3)}, [(point, Symbol('point'), writer)])
+        encoded = to_terms({1: point(2, 3)}, [(point, Symbol('point'), writer)])
         self.assertEqual(
             Map(((1, TaggedValue(Symbol('point'), List((2, 3)))),)), encoded)
+
+    def test_unknown_type(self):
+        self.assertRaises(ValueError, to_terms, Custom(42))
+
+    def test_unknown_type_handler(self):
+        result = to_terms(Custom(42), default=repr)
+        self.assertEqual(String("<Custom(42)>"), result)
+
+    def test_nested_unknown_type_handler(self):
+        result = to_terms([Custom(42)], default=repr)
+        self.assertEqual(Vector([String("<Custom(42)>")]), result)
 
 
 class DumpsTestCase(unittest.TestCase):
@@ -254,6 +282,10 @@ class DumpsTestCase(unittest.TestCase):
         writer = lambda p: (p.x, p.y)
         output = dumps(point(2, 3), [(point, Symbol('point'), writer)])
         self.assertEqual('#point (2 3)', output)
+
+    def test_unknown_handler(self):
+        output = dumps(Custom(42), default=repr)
+        self.assertEqual('"<Custom(42)>"', output)
 
     def test_null(self):
         self.assertEqual('nil', dumps(None))
