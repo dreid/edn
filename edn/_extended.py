@@ -22,6 +22,10 @@ from ._ast import (
 )
 
 
+def identity(x):
+    return x
+
+
 def constantly(x):
     return lambda *a, **kw: x
 
@@ -133,6 +137,9 @@ def to_terms(obj, writers=()):
     """Take a Python object and return an edn AST."""
     # Basic mapping from core Python types to edn AST elements
     # Also includes logic on how to traverse down.
+    #
+    # We can't define these externally yet because the definitions need to
+    # refer to this function, along with custom writers.
     _base_encoding_rules = (
         ((str, unicode), String),
         ((dict, frozendict),
@@ -143,6 +150,7 @@ def to_terms(obj, writers=()):
         (tuple, lambda obj: List([to_terms(x, writers) for x in obj])),
         (list,  lambda obj: Vector([to_terms(x, writers) for x in obj])),
         (type(None), constantly(Nil)),
+        ((int, float), identity),
     )
 
     rules = (
@@ -159,7 +167,7 @@ def to_terms(obj, writers=()):
             if isinstance(obj, base_types):
                 return encoder(obj)
         # For unknown types, just return the object and hope for the best.
-        return obj
+        raise ValueError("Cannot convert %r to edn" % (obj,))
 
 
 def dumps(obj, writers=()):

@@ -141,6 +141,13 @@ class LoadsTestCase(unittest.TestCase):
 
 class EncoderTests(unittest.TestCase):
 
+    def test_bool(self):
+        self.assertEqual(True, to_terms(True))
+        self.assertEqual(False, to_terms(False))
+
+    def test_float(self):
+        self.assertEqual(4.2, to_terms(4.2))
+
     def test_none(self):
         self.assertEqual(Nil, to_terms(None))
         self.assertEqual(List((String('b'), Nil)), to_terms(('b', None)))
@@ -213,6 +220,12 @@ class EncoderTests(unittest.TestCase):
         encoded = to_terms({1: point(2, 3)}, [(point, Symbol('point'), writer)])
         self.assertEqual(
             Map(((1, TaggedValue(Symbol('point'), List((2, 3)))),)), encoded)
+
+    def test_unknown_type(self):
+        class Custom(object):
+            def __init__(self, x):
+                self.x = x
+        self.assertRaises(ValueError, to_terms, Custom(42))
 
 
 class DumpsTestCase(unittest.TestCase):
