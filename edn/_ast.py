@@ -1,3 +1,5 @@
+"""Abstract syntax for edn."""
+
 from functools import partial
 import os
 
@@ -38,18 +40,15 @@ edn = makeGrammar(
 
 
 def parse(string):
+    """Parse a single edn element.
+
+    Returns an abstract representation of a single edn element.
+    """
     return edn(string).edn()
 
 
-def _dump_bool(obj):
-    if obj:
-        return 'true'
-    else:
-        return 'false'
-
-
-def _wrap(start, end, middle):
-    return ''.join([start] + middle + [end])
+def _wrap(start, end, *middle):
+    return ''.join([start] + list(middle) + [end])
 
 
 class _Builder(object):
@@ -61,35 +60,31 @@ class _Builder(object):
         (str, str),
     )
 
-    def _dump_true(self, obj):
+    def _dump_true(self):
         return 'true'
 
-    def _dump_false(self, obj):
+    def _dump_false(self):
         return 'false'
 
-    def _dump_Nil(self, obj):
+    def _dump_Nil(self):
         return 'nil'
 
     def _dump_Character(self, obj):
-        return '\\' + obj[0]
+        return '\\' + obj
 
     def _dump_Keyword(self, obj):
-        return ':' + obj[0]
+        return ':' + obj
 
-    def _dump_Symbol(self, obj):
-        if len(obj) == 2:
-            return '%s/%s' % (obj[1], obj[0])
-        elif len(obj) == 1:
-            return obj[0]
+    def _dump_Symbol(self, name, prefix=None):
+        if prefix:
+            return '%s/%s' % (prefix, name)
         else:
-            raise ValueError("Invalid symbol: %r" % (obj,))
+            return name
 
-    def _dump_TaggedValue(self, obj):
-        [tag, value] = obj
+    def _dump_TaggedValue(self, tag, value):
         return '#%s %s' % (tag, value)
 
     def _dump_String(self, obj):
-        obj = obj[0]
         quote = '"'
         escape = {
             '"': r'\"',
@@ -113,21 +108,28 @@ class _Builder(object):
     _dump_Set = partial(_wrap, '#{', '}')
     _dump_Map = partial(_wrap, '{', '}')
 
+    def _merge_elements(self, *elements):
+        return ' '.join(elements)
+
     def leafTag(self, tag, span):
         if tag.name == '.tuple.':
-            return ' '.join
+            return self._merge_elements
         return getattr(self, '_dump_%s' % (tag.name,))
 
     def leafData(self, data, span=None):
         for base_type, dump_rule in self.PRIMITIVES:
             if isinstance(data, base_type):
-                return lambda args: dump_rule(data)
+                return lambda *args: dump_rule(data)
         raise ValueError("Cannot encode %r" % (data,))
 
     def term(self, f, built_terms):
-        return f(built_terms)
+        return f(*built_terms)
 
 
 def unparse(obj):
+    """Turn an abstract edn element into a string.
+
+    Returns a valid edn string representing 'obj'.
+    """
     builder = _Builder()
     return coerceToTerm(obj).build(builder)
