@@ -85,6 +85,12 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
         for edn_str, expected in floats:
             self.assertEqual(edn(edn_str).float(), expected)
 
+    def disabled_test_integer_as_float(self):
+        # currently failing. parsley is hard.
+        string = '3M'
+        expected = Decimal('3')
+        self.assertEqual(edn(string).float(), expected)
+
     def test_bad_floats(self):
         floats = ('04M', '04.51', '-023.0', '4')
         for string in floats:
