@@ -1,5 +1,6 @@
 from collections import namedtuple
 import datetime
+from decimal import Decimal
 import unittest
 import uuid
 
@@ -36,11 +37,18 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(True, from_terms(True))
         self.assertEqual(False, from_terms(False))
 
-    def test_numbers(self):
+    def test_integers(self):
         self.assertEqual(42, from_terms(42))
+
+    def test_floats(self):
         self.assertEqual(42.3, from_terms(42.3))
         self.assertEqual(-42.3, from_terms(-42.3))
         self.assertEqual(-42.3e3, from_terms(-42.3e3))
+
+    def test_decimal(self):
+        self.assertEqual(Decimal('42.3'), from_terms(Decimal('42.3')))
+        self.assertEqual(Decimal('-42.3'), from_terms(Decimal('-42.3')))
+        self.assertEqual(Decimal('-42.3e3'), from_terms(Decimal('-42.3e3')))
 
     def test_string(self):
         self.assertEqual("foo", from_terms(String("foo")))
@@ -144,6 +152,7 @@ class LoadsTestCase(unittest.TestCase):
     def test_numbers(self):
         self.assertEqual(4.2, loads('4.2'))
         self.assertEqual((Symbol('amount'), -11.4), loads('[amount -11.4]'))
+        self.assertEqual(Decimal('4.2'), loads('4.2M'))
 
 
 class Custom(object):

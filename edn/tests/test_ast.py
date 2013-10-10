@@ -1,3 +1,4 @@
+from decimal import Decimal
 import unittest
 
 from parsley import ParseError
@@ -75,10 +76,11 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
             # XXX: How do you do 'exact precision' in Python?
             ('3.2', 3.2),
             ('+4.7', 4.7),
-            ('+4.7M', 4.7),
+            ('+4.7M', Decimal('4.7')),
             ('-11.8', -11.8),
             ('-11.8e2', -1180.0),
             ('97.4E-02', 0.974),
+            ('97.4E-02M', Decimal('0.974')),
         )
         for edn_str, expected in floats:
             self.assertEqual(edn(edn_str).float(), expected)

@@ -16,6 +16,7 @@ Beyond that::
   my/symbol <=> Symbol('symbol', 'my')
 """
 
+from decimal import Decimal
 from functools import partial
 import os
 
@@ -35,6 +36,12 @@ TaggedValue = t.TaggedValue
 Vector = t.Vector
 
 
+def Float(value, exact):
+    if exact:
+        return Decimal(value)
+    return float(value)
+
+
 _edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
 _edn_grammar_definition = open(_edn_grammar_file).read()
 
@@ -42,6 +49,7 @@ edn = makeGrammar(
     _edn_grammar_definition,
     {
         'Character': Character,
+        'Float': Float,
         'String': String,
         'Symbol': Symbol,
         'Keyword': Keyword,
