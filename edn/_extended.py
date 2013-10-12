@@ -10,6 +10,7 @@ Which can be turned into a Python object::
 """
 
 import datetime
+from decimal import Decimal
 import uuid
 
 import iso8601
@@ -44,6 +45,7 @@ def constantly(x):
 _DECODERS = frozendict({
     '.tuple.': lambda *a: a,
     'Character': unicode,
+    'ExactFloat': Decimal,
     'String': unicode,
     'Vector': tuple,
     'List': tuple,

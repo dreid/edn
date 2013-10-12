@@ -152,7 +152,16 @@ class LoadsTestCase(unittest.TestCase):
     def test_numbers(self):
         self.assertEqual(4.2, loads('4.2'))
         self.assertEqual((Symbol('amount'), -11.4), loads('[amount -11.4]'))
-        self.assertEqual(Decimal('4.2'), loads('4.2M'))
+
+    def test_exact_floats(self):
+        floats = [
+            (Decimal('4.2'), '4.2M'),
+            (Decimal('-4.2'), '-4.2M'),
+            (Decimal('4.2'), '+4.2M'),
+            (Decimal('412.2'), '4.122e2M'),
+        ]
+        for expected, edn_str in floats:
+            self.assertEqual(expected, loads(edn_str))
 
 
 class Custom(object):

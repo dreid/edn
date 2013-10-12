@@ -5,6 +5,7 @@ from parsley import ParseError
 
 from .._ast import (
     Character,
+    ExactFloat,
     List,
     Keyword,
     Map,
@@ -76,11 +77,11 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
             # XXX: How do you do 'exact precision' in Python?
             ('3.2', 3.2),
             ('+4.7', 4.7),
-            ('+4.7M', Decimal('4.7')),
+            ('+4.7M', ExactFloat('+4.7')),
             ('-11.8', -11.8),
             ('-11.8e2', -1180.0),
             ('97.4E-02', 0.974),
-            ('97.4E-02M', Decimal('0.974')),
+            ('97.4E-02M', ExactFloat('97.4E-02')),
         )
         for edn_str, expected in floats:
             self.assertEqual(edn(edn_str).float(), expected)
@@ -172,6 +173,10 @@ class UnparseTestCase(unittest.TestCase):
 
     def test_long(self):
         self.assertEqual('10000N', unparse(10000L))
+
+    def test_decimal(self):
+        self.assertEqual('4.2M', unparse(ExactFloat('4.2')))
+        self.assertEqual('42M', unparse(ExactFloat('42')))
 
     def test_float(self):
         self.assertEqual('0.3', unparse(0.3))

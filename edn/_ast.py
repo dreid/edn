@@ -16,7 +16,6 @@ Beyond that::
   my/symbol <=> Symbol('symbol', 'my')
 """
 
-from decimal import Decimal
 from functools import partial
 import os
 
@@ -25,6 +24,7 @@ from terml.nodes import coerceToTerm, termMaker as t
 
 
 Character = t.Character
+ExactFloat = t.ExactFloat
 Keyword = t.Keyword
 List = t.List
 Map = t.Map
@@ -38,7 +38,7 @@ Vector = t.Vector
 
 def Float(value, exact):
     if exact:
-        return Decimal(value)
+        return ExactFloat(value)
     return float(value)
 
 
@@ -95,6 +95,9 @@ class _Builder(object):
 
     def _dump_Character(self, obj):
         return '\\' + obj
+
+    def _dump_ExactFloat(self, obj):
+        return '%sM' % (obj,)
 
     def _dump_Keyword(self, obj):
         return ':' + obj
@@ -156,4 +159,10 @@ def unparse(obj):
     Returns a valid edn string representing 'obj'.
     """
     builder = _Builder()
+    # XXX: Cannot coerce Decimal to term, so we need to wrap it up in a Term,
+    # I think.
+    #
+    # Maybe an Exact() term that's returned only for this.
+    # Maybe change the int part of the rule to yield an Exact term
+    # <int_part>:f 'M' -> Exact(f) | ...
     return coerceToTerm(obj).build(builder)
