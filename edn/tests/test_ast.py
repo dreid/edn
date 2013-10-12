@@ -1,3 +1,4 @@
+from StringIO import StringIO
 import unittest
 
 from .._ast import (
@@ -13,6 +14,7 @@ from .._ast import (
     Vector,
     edn,
     parse,
+    parse_stream,
     unparse,
 )
 
@@ -130,6 +132,17 @@ class ParseTestCase(unittest.TestCase):
     def test_structure(self):
         self.assertEqual(Set([1,2,3]), parse('#{1 2 3}'))
         self.assertEqual(Map([(1, 2), (3, 4)]), parse('{1 2, 3 4}'))
+
+
+class ParseStreamTestCase(unittest.TestCase):
+
+    def test_stream(self):
+        stream = StringIO('1 2 #{4 5} "foo" [bar qux]')
+        parsed = list(parse_stream(stream))
+        expected = [
+            1, 2, Set([4, 5]), String("foo"),
+            Vector((Symbol('bar'), Symbol('qux')))]
+        self.assertEqual(expected, parsed)
 
 
 class UnparseTestCase(unittest.TestCase):

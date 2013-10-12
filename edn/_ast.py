@@ -22,6 +22,8 @@ import os
 from parsley import makeGrammar
 from terml.nodes import coerceToTerm, termMaker as t
 
+from ._parsley import iterGrammar, parseGrammar
+
 
 Character = t.Character
 Keyword = t.Keyword
@@ -38,21 +40,21 @@ Vector = t.Vector
 _edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
 _edn_grammar_definition = open(_edn_grammar_file).read()
 
-edn = makeGrammar(
-    _edn_grammar_definition,
-    {
-        'Character': Character,
-        'String': String,
-        'Symbol': Symbol,
-        'Keyword': Keyword,
-        'Vector': Vector,
-        'TaggedValue': TaggedValue,
-        'Map': Map,
-        'Nil': Nil,
-        'Set': Set,
-        'List': List,
-    },
-    name='edn')
+_edn_bindings = {
+    'Character': Character,
+    'String': String,
+    'Symbol': Symbol,
+    'Keyword': Keyword,
+    'Vector': Vector,
+    'TaggedValue': TaggedValue,
+    'Map': Map,
+    'Nil': Nil,
+    'Set': Set,
+    'List': List,
+}
+
+_parsed_edn = parseGrammar(_edn_grammar_definition, 'edn')
+edn = makeGrammar(_edn_grammar_definition, _edn_bindings, name='edn')
 
 
 def parse(string):
@@ -61,6 +63,10 @@ def parse(string):
     Returns an abstract representation of a single edn element.
     """
     return edn(string).edn()
+
+
+def parse_stream(stream):
+    return iterGrammar(_parsed_edn, _edn_bindings, 'edn', stream)
 
 
 def _wrap(start, end, *middle):
