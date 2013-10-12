@@ -202,7 +202,8 @@ nonzero_digit = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 int_part = sign (nonzero_digit digit+ | digit)
 frac = '.' digit+
 exp = ('e' | 'E') sign digit+
-float = <int_part>:f 'M':m | <int_part (frac exp | exp | frac)>:f ('M'?):m -> Float(f, m)
+float = (<int_part>:f 'M' -> Float(f, True))
+        | (<int_part (frac exp | exp | frac)>:f ('M'?):m -> Float(f, m))
 
 #
 # ### lists

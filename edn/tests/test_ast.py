@@ -67,6 +67,7 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
                     ("-10", -10),
                     ("10", 10),
                     ("+10", 10),
+                    ("4", 4),
                     ("10000N", 10000L)]
 
         for edn_str, expected in integers:
@@ -74,7 +75,6 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
 
     def test_float(self):
         floats = (
-            # XXX: How do you do 'exact precision' in Python?
             ('3.2', 3.2),
             ('+4.7', 4.7),
             ('+4.7M', ExactFloat('+4.7')),
@@ -82,15 +82,10 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
             ('-11.8e2', -1180.0),
             ('97.4E-02', 0.974),
             ('97.4E-02M', ExactFloat('97.4E-02')),
+            ('32M', ExactFloat('32')),
         )
         for edn_str, expected in floats:
             self.assertEqual(edn(edn_str).float(), expected)
-
-    def disabled_test_integer_as_float(self):
-        # currently failing. parsley is hard.
-        string = '3M'
-        expected = Decimal('3')
-        self.assertEqual(edn(string).float(), expected)
 
     def test_bad_floats(self):
         floats = ('04M', '04.51', '-023.0', '4')
