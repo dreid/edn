@@ -136,13 +136,15 @@ class ParseTestCase(unittest.TestCase):
 
 class ParseStreamTestCase(unittest.TestCase):
 
-    def test_stream(self):
+    def test_iterator(self):
         stream = StringIO('1 2 #{4 5} "foo" [bar qux]')
-        parsed = list(parse_stream(stream))
-        expected = [
-            1, 2, Set([4, 5]), String("foo"),
-            Vector((Symbol('bar'), Symbol('qux')))]
-        self.assertEqual(expected, parsed)
+        output = parse_stream(stream)
+        self.assertEqual(1, output.next())
+        self.assertEqual(2, output.next())
+        self.assertEqual(Set([4, 5]), output.next())
+        self.assertEqual(String("foo"), output.next())
+        self.assertEqual(Vector((Symbol('bar'), Symbol('qux'))), output.next())
+        self.assertRaises(StopIteration, output.next)
 
 
 class UnparseTestCase(unittest.TestCase):
