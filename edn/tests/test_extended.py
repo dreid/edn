@@ -15,6 +15,7 @@ from edn import (
 )
 from .._ast import (
     Character,
+    ExactFloat,
     List,
     Map,
     Nil,
@@ -181,6 +182,10 @@ class EncoderTests(unittest.TestCase):
     def test_float(self):
         self.assertEqual(4.2, to_terms(4.2))
 
+    def test_decimal(self):
+        self.assertEqual(ExactFloat('4.2'), to_terms(Decimal('4.2')))
+        self.assertEqual(ExactFloat('42'), to_terms(Decimal('4.2e1')))
+
     def test_none(self):
         self.assertEqual(Nil, to_terms(None))
         self.assertEqual(List((String('b'), Nil)), to_terms(('b', None)))
@@ -308,6 +313,10 @@ class DumpsTestCase(unittest.TestCase):
     def test_null(self):
         self.assertEqual('nil', dumps(None))
         self.assertEqual('("b" nil)', dumps(('b', None)))
+
+    def test_decimal(self):
+        self.assertEqual('4.1234M', dumps(Decimal('4.1234')))
+        self.assertEqual('4M', dumps(Decimal('4')))
 
     def test_complex(self):
         writers = (
