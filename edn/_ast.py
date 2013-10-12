@@ -155,3 +155,9 @@ def unparse(obj):
     """
     builder = _Builder()
     return coerceToTerm(obj).build(builder)
+
+
+def unparse_stream(input_stream):
+    builder = _Builder()
+    for element in input_stream:
+        yield coerceToTerm(element).build(builder)

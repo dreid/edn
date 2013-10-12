@@ -16,6 +16,7 @@ from .._ast import (
     parse,
     parse_stream,
     unparse,
+    unparse_stream,
 )
 
 
@@ -236,3 +237,13 @@ class UnparseTestCase(unittest.TestCase):
         self.assertEqual(
             '#foo "bar"',
             unparse(TaggedValue(Symbol('foo'), String('bar'))))
+
+
+class UnparseStreamTestCase(unittest.TestCase):
+
+    def test_unparse_stream(self):
+        input_stream = iter([Symbol('foo'), String("bar")])
+        output_stream = unparse_stream(input_stream)
+        self.assertEqual('foo', output_stream.next())
+        self.assertEqual('"bar"', output_stream.next())
+        self.assertRaises(StopIteration, output_stream.next)
