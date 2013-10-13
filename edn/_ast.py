@@ -159,10 +159,4 @@ def unparse(obj):
     Returns a valid edn string representing 'obj'.
     """
     builder = _Builder()
-    # XXX: Cannot coerce Decimal to term, so we need to wrap it up in a Term,
-    # I think.
-    #
-    # Maybe an Exact() term that's returned only for this.
-    # Maybe change the int part of the rule to yield an Exact term
-    # <int_part>:f 'M' -> Exact(f) | ...
     return coerceToTerm(obj).build(builder)
