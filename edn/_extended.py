@@ -135,8 +135,7 @@ def loads(string, readers=frozendict(), default=None):
     return from_terms(parse(string), readers, default)
 
 
-# XXX: Take readers & default
-def load(stream):
+def load(stream, readers=frozendict(), default=None):
     """Interpret an edn stream.
 
     Load an edn stream lazily as a Python iterator over the elements defined
@@ -146,12 +145,18 @@ def load(stream):
     See https://github.com/edn-format/edn.
 
     :param stream: A file-like object of UTF-8 encoded text containing edn data.
+    :param readers: A map from tag symbols to callables.  For '#foo bar'
+        whatever callable the Symbol('foo') key is mapped to will be
+        called with 'bar'.  There are default readers for #inst and #uuid,
+        which can be overridden here.
+    :param default: Called whenever we come across a tagged value that is not
+        mentioned in `readers'.  It gets the symbol and the interpreted value,
+        and whatever it returns is how that value will be interpreted.
     :return: An iterator of Python objects representing the edn elements in
         the stream.
-
     """
     for term in parse_stream(stream):
-        yield from_terms(term)
+        yield from_terms(term, readers, default=default)
 
 
 def _get_tag_name(obj):

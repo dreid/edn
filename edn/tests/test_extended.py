@@ -117,6 +117,10 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(uuid.UUID(uid), from_terms(ast))
 
 
+def reverse(x):
+    return list(reversed(x))
+
+
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
@@ -125,7 +129,7 @@ class LoadsTestCase(unittest.TestCase):
 
     def test_custom_tag(self):
         text = '#foo [1 2]'
-        parsed = loads(text, {Symbol('foo'): lambda x: list(reversed(x))})
+        parsed = loads(text, {Symbol('foo'): reverse})
         self.assertEqual([2, 1], parsed)
 
     def test_custom_default(self):
@@ -155,6 +159,18 @@ class LoadTestCase(unittest.TestCase):
         self.assertEqual(43, stream.next())
         self.assertEqual(32, stream.next())
         self.assertRaises(StopIteration, stream.next)
+
+    def test_custom_tag(self):
+        text = '#foo [1 2] #foo [3 4]'
+        parsed = load(StringIO(text), {Symbol('foo'): reverse})
+        self.assertEqual([[2, 1], [4, 3]], list(parsed))
+
+    def test_custom_default(self):
+        marker = object()
+        handler = lambda a, b: (marker, b)
+        stream = StringIO('#foo [1 2] #bar "qux"')
+        parsed = list(load(stream, default=handler))
+        self.assertEqual([(marker, (1, 2)), (marker, u"qux")], parsed)
 
 
 class Custom(object):
