@@ -307,7 +307,7 @@ set = '#{' elem*:elems '}' -> Set(elems)
 # canonical UUID string representation.
 #
 
-tag = '#' symbol:t spaces datum:v -> TaggedValue(t, v)
+tag = '#' symbol:t consumable datum:v -> TaggedValue(t, v)
 
 # ## comments
 #
