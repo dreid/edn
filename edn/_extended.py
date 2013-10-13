@@ -31,6 +31,7 @@ from ._ast import (
     parse,
     parse_stream,
     unparse,
+    unparse_stream,
 )
 
 
@@ -217,4 +218,38 @@ def to_terms(obj, writers=(), default=_default_handler):
 
 
 def dumps(obj, writers=(), default=_default_handler):
+    """Convert a single object to valid edn.
+
+    :param obj: The object to be converted to edn.
+    :param writers: A sequence of (type, symbol, callable) for encoding types
+        that are not immediately supported by edn.  Any object that matches
+        'type' (as determined by isinstance) will be turned into a tagged
+        value, where the tag is 'symbol', and the value is the edn-encoded
+        result of 'callable(obj)'.
+    :param default: Used to handle any object for which there isn't a defined
+        writer.  Unary callable taking the unrecognized object.  Will raise
+        ValueError by default.
+    """
     return unparse(to_terms(obj, writers, default))
+
+
+def dump(objs, output_stream, writers=(), default=_default_handler):
+    """Write a sequence of objects as edn.
+
+    Elements will be separated by UNIX newlines.  This may change in future
+    versions.
+
+    :param objs: An iterable of objects to be written as edn.
+    :param output_stream: A file-like object to write the edn data to.
+    :param writers: A sequence of (type, symbol, callable) for encoding types
+        that are not immediately supported by edn.  Any object that matches
+        'type' (as determined by isinstance) will be turned into a tagged
+        value, where the tag is 'symbol', and the value is the edn-encoded
+        result of 'callable(obj)'.
+    :param default: Used to handle any object for which there isn't a defined
+        writer.  Unary callable taking the unrecognized object.  Will raise
+        ValueError by default.
+
+    """
+    terms = (to_terms(obj, writers, default) for obj in objs)
+    unparse_stream(terms, output_stream)

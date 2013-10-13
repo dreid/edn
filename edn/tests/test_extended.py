@@ -8,6 +8,7 @@ import iso8601
 from perfidy import frozendict
 
 from edn import (
+    dump,
     dumps,
     load,
     loads,
@@ -344,3 +345,26 @@ class DumpsTestCase(unittest.TestCase):
             '("id" "%s") ("foo" "bar")]'
         ) % (str(uid), str(uid))
         self.assertEqual(expected, dumps(data, writers))
+
+
+class TestDump(unittest.TestCase):
+
+    def test_dump(self):
+        inputs = [{'foo': 42}, set([2, 3, 7])]
+        output = StringIO()
+        dump(inputs, output)
+        self.assertEqual(
+            '{"foo" 42}\n#{2 3 7}\n',
+            output.getvalue())
+
+    def test_custom_writer(self):
+        point = namedtuple('point', 'x y')
+        writer = lambda p: (p.x, p.y)
+        output = StringIO()
+        dump([point(2, 3)], output, [(point, Symbol('point'), writer)])
+        self.assertEqual('#point (2 3)\n', output.getvalue())
+
+    def test_unknown_handler(self):
+        output = StringIO()
+        dump([Custom(42)], output, default=repr)
+        self.assertEqual('"<Custom(42)>"\n', output.getvalue())
