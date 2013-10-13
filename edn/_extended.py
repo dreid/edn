@@ -29,6 +29,7 @@ from ._ast import (
     TaggedValue,
     Vector,
     parse,
+    parse_stream,
     unparse,
 )
 
@@ -132,6 +133,25 @@ def loads(string, readers=frozendict(), default=None):
     :return: A Python object representing the edn element.
     """
     return from_terms(parse(string), readers, default)
+
+
+# XXX: Take readers & default
+def load(stream):
+    """Interpret an edn stream.
+
+    Load an edn stream lazily as a Python iterator over the elements defined
+    in stream.  We can do this because edn does not mandate a top-level
+    enclosing element.
+
+    See https://github.com/edn-format/edn.
+
+    :param stream: A file-like object of UTF-8 encoded text containing edn data.
+    :return: An iterator of Python objects representing the edn elements in
+        the stream.
+
+    """
+    for term in parse_stream(stream):
+        yield from_terms(term)
 
 
 def _get_tag_name(obj):

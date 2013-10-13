@@ -4,5 +4,6 @@ from ._ast import (
 )
 from ._extended import (
     dumps,
+    load,
     loads,
 )

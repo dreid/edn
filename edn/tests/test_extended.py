@@ -1,5 +1,6 @@
 from collections import namedtuple
 import datetime
+from StringIO import StringIO
 import unittest
 import uuid
 
@@ -8,6 +9,7 @@ from perfidy import frozendict
 
 from edn import (
     dumps,
+    load,
     loads,
     Keyword,
     Symbol,
@@ -137,6 +139,22 @@ class LoadsTestCase(unittest.TestCase):
         loads(text, {foo: lambda x: list(reversed(x))})
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
+
+
+class LoadTestCase(unittest.TestCase):
+
+    def test_single_element(self):
+        stream = load(StringIO('#{1 2 3}'))
+        self.assertEqual(set([1,2,3]), stream.next())
+        self.assertRaises(StopIteration, stream.next)
+
+    def test_multiple_elements(self):
+        stream = load(StringIO('#{1 2 3} "foo"\n43,32'))
+        self.assertEqual(set([1,2,3]), stream.next())
+        self.assertEqual(u"foo", stream.next())
+        self.assertEqual(43, stream.next())
+        self.assertEqual(32, stream.next())
+        self.assertRaises(StopIteration, stream.next)
 
 
 class Custom(object):
