@@ -138,6 +138,9 @@ class LoadsTestCase(unittest.TestCase):
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
 
+    def test_nil(self):
+        self.assertIs(None, loads('nil'))
+
 
 class Custom(object):
     """Used in tests as an unrecognized object."""

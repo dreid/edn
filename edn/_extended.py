@@ -41,6 +41,12 @@ def constantly(x):
     return lambda *a, **kw: x
 
 
+def _decode_symbol(x):
+    if x == 'nil':
+        return None
+    return Symbol(x)
+
+
 _DECODERS = frozendict({
     '.tuple.': lambda *a: a,
     'Character': unicode,
@@ -50,7 +56,7 @@ _DECODERS = frozendict({
     'Map': frozendict,
     'Nil': constantly(None),
     'Set': frozenset,
-    'Symbol': Symbol,
+    'Symbol': _decode_symbol,
     'Keyword': Keyword,
 })
 
