@@ -114,8 +114,11 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
             self.assertEqual(edn(edn_str).set(), expected)
 
     def test_tag(self):
-        self.assertEqual(edn('#foo/bar baz').tag(),
-                         TaggedValue(Symbol('bar', 'foo'), Symbol('baz')))
+        tags = [
+            ('#foo/bar baz', TaggedValue(Symbol('bar', 'foo'), Symbol('baz'))),
+        ]
+        for edn_str, expected in tags:
+            self.assertEqual(edn(edn_str).tag(), expected)
 
     def test_comment(self):
         self.assertEqual(
