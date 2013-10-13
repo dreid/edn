@@ -157,7 +157,14 @@ def unparse(obj):
     return coerceToTerm(obj).build(builder)
 
 
-def unparse_stream(input_stream):
+def unparse_stream(input_elements, output_stream):
+    """Write abstract edn elements out as edn to a file-like object.
+
+    Elements will be separated by UNIX newlines.  This may change in future
+    versions.
+    """
+    separator = u'\n'.encode('utf8')
     builder = _Builder()
-    for element in input_stream:
-        yield coerceToTerm(element).build(builder)
+    for element in input_elements:
+        output_stream.write(coerceToTerm(element).build(builder))
+        output_stream.write(separator)
