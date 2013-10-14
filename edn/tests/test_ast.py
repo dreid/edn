@@ -1,7 +1,7 @@
 from decimal import Decimal
 import unittest
 
-from parsley import ParseError
+import parsley
 
 from .._ast import (
     Character,
@@ -22,6 +22,16 @@ from .._ast import (
 
 
 class EDNTestCase(unittest.TestCase):
+
+    def assertInvalid(self, rule, inputs):
+        for i in inputs:
+            self.assertRaises(parsley.ParseError, getattr(edn(i), rule))
+
+    def assertRuleProduces(self, rule, pairs):
+        inputs, expected = zip(*pairs)
+        observed = [getattr(edn(i), rule)() for i in inputs]
+        self.assertEqual(list(expected), observed)
+
     def test_nil(self):
         self.assertEqual(edn("nil").nil(), Nil)
 
@@ -51,10 +61,34 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
         self.assertEqual(edn(r"\space").character(), Character(" "))
 
     def test_symbol(self):
-        self.assertEqual(edn("foo").symbol(), Symbol("foo"))
-        self.assertEqual(edn(".foo").symbol(), Symbol(".foo"))
-        self.assertEqual(edn("/").symbol(), Symbol("/"))
-        self.assertEqual(edn("foo/bar").symbol(), Symbol("bar", "foo"))
+        symbols = [
+            ('foo', Symbol('foo')),
+            ('.foo', Symbol('.foo')),
+            ('/', Symbol('/')),
+            ('foo/bar', Symbol('bar', 'foo')),
+            ('a', Symbol('a')),
+            ('predicate?', Symbol('predicate?')),
+            ('+foo', Symbol('+foo')),
+            ('a1', Symbol('a1')),
+            ('!foo', Symbol('!foo')),
+            ('-$foo', Symbol('-$foo')),
+            ('foo:bar', Symbol('foo:bar')),
+            ('foo#bar', Symbol('foo#bar')),
+            ('+:foo', Symbol('+:foo')),
+        ]
+        self.assertRuleProduces('symbol', symbols)
+
+    def test_invalid_symbols(self):
+        invalid = [
+            '9aeuoeu',
+            '-9aou',
+            'foo^bar',
+            '#foo',
+            ':foo',
+            '/foo',
+            'foo/',
+        ]
+        self.assertInvalid('symbol', invalid)
 
     def test_keyword(self):
         self.assertEqual(edn(":foo").keyword(), Keyword(Symbol("foo")))
@@ -90,7 +124,7 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
     def test_bad_floats(self):
         floats = ('04M', '04.51', '-023.0', '4')
         for string in floats:
-            self.assertRaises(ParseError, edn(string).float)
+            self.assertRaises(parsley.ParseError, edn(string).float)
 
     def test_list(self):
         lists = [
