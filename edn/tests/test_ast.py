@@ -1,7 +1,11 @@
+from decimal import Decimal
 import unittest
+
+from parsley import ParseError
 
 from .._ast import (
     Character,
+    ExactFloat,
     List,
     Keyword,
     Map,
@@ -63,10 +67,30 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
                     ("-10", -10),
                     ("10", 10),
                     ("+10", 10),
+                    ("4", 4),
                     ("10000N", 10000L)]
 
         for edn_str, expected in integers:
             self.assertEqual(edn(edn_str).integer(), expected)
+
+    def test_float(self):
+        floats = (
+            ('3.2', 3.2),
+            ('+4.7', 4.7),
+            ('+4.7M', ExactFloat('+4.7')),
+            ('-11.8', -11.8),
+            ('-11.8e2', -1180.0),
+            ('97.4E-02', 0.974),
+            ('97.4E-02M', ExactFloat('97.4E-02')),
+            ('32M', ExactFloat('32')),
+        )
+        for edn_str, expected in floats:
+            self.assertEqual(edn(edn_str).float(), expected)
+
+    def test_bad_floats(self):
+        floats = ('04M', '04.51', '-023.0', '4')
+        for string in floats:
+            self.assertRaises(ParseError, edn(string).float)
 
     def test_list(self):
         lists = [
@@ -144,6 +168,10 @@ class UnparseTestCase(unittest.TestCase):
 
     def test_long(self):
         self.assertEqual('10000N', unparse(10000L))
+
+    def test_decimal(self):
+        self.assertEqual('4.2M', unparse(ExactFloat('4.2')))
+        self.assertEqual('42M', unparse(ExactFloat('42')))
 
     def test_float(self):
         self.assertEqual('0.3', unparse(0.3))
