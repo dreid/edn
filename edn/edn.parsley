@@ -214,9 +214,9 @@ float = (<int_part>:f 'M' -> Float(f, True))
 #     (a b 42)
 #
 
-datum = symbol
-        | keyword | boolean | nil | float | integer | string | character | list
-        | vector | map | set | tag
+datum = nil
+        | boolean | symbol | keyword | float | integer | string | character
+        | list | vector | map | set | tag
 
 edn = consumable datum:d consumable -> d
 
