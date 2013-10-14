@@ -26,6 +26,7 @@ from ._parsley import iterGrammar, parseGrammar
 
 
 Character = t.Character
+ExactFloat = t.ExactFloat
 Keyword = t.Keyword
 List = t.List
 Map = t.Map
@@ -37,11 +38,18 @@ TaggedValue = t.TaggedValue
 Vector = t.Vector
 
 
+def Float(value, exact):
+    if exact:
+        return ExactFloat(value)
+    return float(value)
+
+
 _edn_grammar_file = os.path.join(os.path.dirname(__file__), 'edn.parsley')
 _edn_grammar_definition = open(_edn_grammar_file).read()
 
 _edn_bindings = {
     'Character': Character,
+    'Float': Float,
     'String': String,
     'Symbol': Symbol,
     'Keyword': Keyword,
@@ -93,6 +101,9 @@ class _Builder(object):
 
     def _dump_Character(self, obj):
         return '\\' + obj
+
+    def _dump_ExactFloat(self, obj):
+        return '%sM' % (obj,)
 
     def _dump_Keyword(self, obj):
         return ':' + obj
