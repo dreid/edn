@@ -78,15 +78,22 @@ class DecoderTests(unittest.TestCase):
 
     def test_symbol(self):
         self.assertEqual(Symbol('foo'), from_terms(Symbol('foo')))
+        self.assertEqual(Symbol('foo', 'bar'), from_terms(Symbol('foo', 'bar')))
 
     def test_keyword(self):
         self.assertEqual(
             Keyword(Symbol('foo')), from_terms(Keyword(Symbol('foo'))))
+        self.assertEqual(
+            Keyword(Symbol('foo', 'bar')),
+            from_terms(Keyword(Symbol('foo', 'bar'))))
 
     def test_tagged_value(self):
         self.assertEqual(
             TaggedValue(Symbol('foo'), 'bar'),
             from_terms(TaggedValue(Symbol('foo'), String('bar'))))
+        self.assertEqual(
+            TaggedValue(Symbol('foo', 'qux'), 'bar'),
+            from_terms(TaggedValue(Symbol('foo', 'qux'), String('bar'))))
 
     def test_readers(self):
         ast = TaggedValue(Symbol('foo'), String('bar'))
@@ -139,6 +146,9 @@ class LoadsTestCase(unittest.TestCase):
     def test_structure(self):
         self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
         self.assertEqual(frozendict({1: 2, 3: 4}), loads('{1 2, 3 4}'))
+        self.assertEqual(
+            frozendict({Keyword(Symbol('foo')): Symbol('bar')}),
+            loads('{:foo bar}'))
 
     def test_custom_tag(self):
         text = '#foo [1 2]'
@@ -156,6 +166,13 @@ class LoadsTestCase(unittest.TestCase):
         loads(text, {foo: lambda x: list(reversed(x))})
         parsed = loads(text)
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
+
+    def test_nil(self):
+        self.assertIs(None, loads('nil'))
+
+    def test_bool(self):
+        self.assertEqual(True, loads('true'))
+        self.assertEqual(False, loads('false'))
 
     def test_numbers(self):
         self.assertEqual(4.2, loads('4.2'))

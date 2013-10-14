@@ -97,7 +97,10 @@ escaped_characters = '\\' ('"' -> '"'
                           |'t' -> '\t'
                           |'\'' -> '\'')
 
-punctuation = '.' | '*' | '+' | '!' | '-' | '_' | '?' | '$' | '%' | '&' | '='
+
+numeric_punctuation = '.' | '+' | '-'
+other_punctuation = '*' | '!' | '_' | '?' | '$' | '%' | '&' | '='
+punctuation = numeric_punctuation | other_punctuation
 string = '"' (escaped_characters | ~('"') anything)*:c '"'
          -> String(''.join(c).decode('utf8'))
 
@@ -136,7 +139,9 @@ character = '\\' ('"' -> '"'
 # first-character restrictions for symbols as a whole. This is to avoid ambiguity in reading contexts
 # where prefixes might be presumed as implicitly included namespaces and elided thereafter.
 
-symbol_part = <('.' | '-' | '+'){0,1} letter (letter | digit | punctuation)+>:s
+non_numeric = letter | punctuation
+symbol_part = <(numeric_punctuation (non_numeric | ':' | '#') | letter | other_punctuation)
+               (letter | digit | punctuation | ':' | '#')*>:s
 simple_symbol = <symbol_part | '/'>:s -> Symbol(s)
 prefixed_symbol = symbol_part:p '/' symbol_part:s
     -> Symbol(s, p)
@@ -214,9 +219,9 @@ float = (<int_part>:f 'M' -> Float(f, True))
 #     (a b 42)
 #
 
-datum = symbol
-        | keyword | boolean | nil | float | integer | string | character | list
-        | vector | map | set | tag
+datum = nil
+        | boolean | symbol | keyword | float | integer | string | character
+        | list | vector | map | set | tag
 
 edn = consumable datum:d consumable -> d
 
