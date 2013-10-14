@@ -28,13 +28,12 @@ ExactFloat = t.ExactFloat
 Keyword = t.Keyword
 List = t.List
 Map = t.Map
+Nil = t.Nil()
 Set = t.Set
 String = t.String
 Symbol = t.Symbol
 TaggedValue = t.TaggedValue
 Vector = t.Vector
-
-Nil = t.Symbol('nil')
 
 
 def Float(value, exact):
