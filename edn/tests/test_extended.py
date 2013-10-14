@@ -1,5 +1,6 @@
 from collections import namedtuple
 import datetime
+from decimal import Decimal
 import unittest
 import uuid
 
@@ -14,6 +15,7 @@ from edn import (
 )
 from .._ast import (
     Character,
+    ExactFloat,
     List,
     Map,
     Nil,
@@ -36,8 +38,18 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(True, from_terms(True))
         self.assertEqual(False, from_terms(False))
 
-    def test_int(self):
+    def test_integers(self):
         self.assertEqual(42, from_terms(42))
+
+    def test_floats(self):
+        self.assertEqual(42.3, from_terms(42.3))
+        self.assertEqual(-42.3, from_terms(-42.3))
+        self.assertEqual(-42.3e3, from_terms(-42.3e3))
+
+    def test_decimal(self):
+        self.assertEqual(Decimal('42.3'), from_terms(Decimal('42.3')))
+        self.assertEqual(Decimal('-42.3'), from_terms(Decimal('-42.3')))
+        self.assertEqual(Decimal('-42.3e3'), from_terms(Decimal('-42.3e3')))
 
     def test_string(self):
         self.assertEqual("foo", from_terms(String("foo")))
@@ -141,6 +153,20 @@ class LoadsTestCase(unittest.TestCase):
     def test_nil(self):
         self.assertIs(None, loads('nil'))
 
+    def test_numbers(self):
+        self.assertEqual(4.2, loads('4.2'))
+        self.assertEqual((Symbol('amount'), -11.4), loads('[amount -11.4]'))
+
+    def test_exact_floats(self):
+        floats = [
+            (Decimal('4.2'), '4.2M'),
+            (Decimal('-4.2'), '-4.2M'),
+            (Decimal('4.2'), '+4.2M'),
+            (Decimal('412.2'), '4.122e2M'),
+        ]
+        for expected, edn_str in floats:
+            self.assertEqual(expected, loads(edn_str))
+
 
 class Custom(object):
     """Used in tests as an unrecognized object."""
@@ -158,6 +184,10 @@ class EncoderTests(unittest.TestCase):
 
     def test_float(self):
         self.assertEqual(4.2, to_terms(4.2))
+
+    def test_decimal(self):
+        self.assertEqual(ExactFloat('4.2'), to_terms(Decimal('4.2')))
+        self.assertEqual(ExactFloat('42'), to_terms(Decimal('4.2e1')))
 
     def test_none(self):
         self.assertEqual(Nil, to_terms(None))
@@ -286,6 +316,10 @@ class DumpsTestCase(unittest.TestCase):
     def test_null(self):
         self.assertEqual('nil', dumps(None))
         self.assertEqual('("b" nil)', dumps(('b', None)))
+
+    def test_decimal(self):
+        self.assertEqual('4.1234M', dumps(Decimal('4.1234')))
+        self.assertEqual('4M', dumps(Decimal('4')))
 
     def test_complex(self):
         writers = (

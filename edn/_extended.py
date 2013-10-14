@@ -10,6 +10,7 @@ Which can be turned into a Python object::
 """
 
 import datetime
+from decimal import Decimal
 import uuid
 
 import iso8601
@@ -19,6 +20,7 @@ from perfidy import (
 )
 
 from ._ast import (
+    ExactFloat,
     Keyword,
     List,
     Map,
@@ -50,6 +52,7 @@ def _decode_symbol(x):
 _DECODERS = frozendict({
     '.tuple.': lambda *a: a,
     'Character': unicode,
+    'ExactFloat': Decimal,
     'String': unicode,
     'Vector': tuple,
     'List': tuple,
@@ -156,6 +159,10 @@ DEFAULT_WRITERS = (
 )
 
 
+def _toExactFloat(decimal):
+    return ExactFloat(str(decimal))
+
+
 def _default_handler(obj):
     raise ValueError("Cannot convert %r to edn" % (obj,))
 
@@ -179,6 +186,7 @@ def to_terms(obj, writers=(), default=_default_handler):
         (list,  lambda obj: Vector(map(recurse, obj))),
         (type(None), constantly(Nil)),
         ((int, float), identity),
+        (Decimal, _toExactFloat),
     )
 
     rules = (

@@ -161,7 +161,7 @@ keyword = (':' prefixed_symbol:s | ':' simple_symbol:s) -> Keyword(s)
 # or (redundantly) by `+`. An integer can have the suffix `N` to indicate that arbitrary precision is
 # desired. -0 is a valid integer not distinct from 0.
 
-integer = <('+' | '-'){0,1} digit+>:i 'N'?-> int(i)
+integer = <sign digit+>:i 'N'? -> int(i)
 
 # ### floating point numbers
 #
@@ -196,6 +196,15 @@ integer = <('+' | '-'){0,1} digit+>:i 'N'?-> int(i)
 #
 # In addition, a floating-point number may have the suffix `M` to indicate that exact precision is
 # desired.
+
+sign = ('+' | '-')?
+nonzero_digit = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+int_part = sign (nonzero_digit digit+ | digit)
+frac = '.' digit+
+exp = ('e' | 'E') sign digit+
+float = (<int_part>:f 'M' -> Float(f, True))
+        | (<int_part (frac exp | exp | frac)>:f ('M'?):m -> Float(f, m))
+
 #
 # ### lists
 #
@@ -206,7 +215,7 @@ integer = <('+' | '-'){0,1} digit+>:i 'N'?-> int(i)
 #
 
 datum = symbol
-        | keyword | boolean | nil | integer | string | character | list
+        | keyword | boolean | nil | float | integer | string | character | list
         | vector | map | set | tag
 
 edn = consumable datum:d consumable -> d
@@ -307,7 +316,7 @@ set = '#{' elem*:elems '}' -> Set(elems)
 # canonical UUID string representation.
 #
 
-tag = '#' symbol:t spaces datum:v -> TaggedValue(t, v)
+tag = '#' symbol:t consumable datum:v -> TaggedValue(t, v)
 
 # ## comments
 #
