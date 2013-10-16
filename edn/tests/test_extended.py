@@ -1,6 +1,7 @@
 from collections import namedtuple
 import datetime
 from decimal import Decimal
+from StringIO import StringIO
 import unittest
 import uuid
 
@@ -8,7 +9,9 @@ import iso8601
 from perfidy import frozendict
 
 from edn import (
+    dump,
     dumps,
+    load,
     loads,
     Keyword,
     Symbol,
@@ -134,6 +137,10 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(uuid.UUID(uid), from_terms(ast))
 
 
+def reverse(x):
+    return list(reversed(x))
+
+
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
@@ -145,7 +152,7 @@ class LoadsTestCase(unittest.TestCase):
 
     def test_custom_tag(self):
         text = '#foo [1 2]'
-        parsed = loads(text, {Symbol('foo'): lambda x: list(reversed(x))})
+        parsed = loads(text, {Symbol('foo'): reverse})
         self.assertEqual([2, 1], parsed)
 
     def test_custom_default(self):
@@ -180,6 +187,34 @@ class LoadsTestCase(unittest.TestCase):
         ]
         for expected, edn_str in floats:
             self.assertEqual(expected, loads(edn_str))
+
+
+class LoadTestCase(unittest.TestCase):
+
+    def test_single_element(self):
+        stream = load(StringIO('#{1 2 3}'))
+        self.assertEqual(set([1,2,3]), stream.next())
+        self.assertRaises(StopIteration, stream.next)
+
+    def test_multiple_elements(self):
+        stream = load(StringIO('#{1 2 3} "foo"\n43,32'))
+        self.assertEqual(set([1,2,3]), stream.next())
+        self.assertEqual(u"foo", stream.next())
+        self.assertEqual(43, stream.next())
+        self.assertEqual(32, stream.next())
+        self.assertRaises(StopIteration, stream.next)
+
+    def test_custom_tag(self):
+        text = '#foo [1 2] #foo [3 4]'
+        parsed = load(StringIO(text), {Symbol('foo'): reverse})
+        self.assertEqual([[2, 1], [4, 3]], list(parsed))
+
+    def test_custom_default(self):
+        marker = object()
+        handler = lambda a, b: (marker, b)
+        stream = StringIO('#foo [1 2] #bar "qux"')
+        parsed = list(load(stream, default=handler))
+        self.assertEqual([(marker, (1, 2)), (marker, u"qux")], parsed)
 
 
 class Custom(object):
@@ -361,3 +396,26 @@ class DumpsTestCase(unittest.TestCase):
             '("id" "%s") ("foo" "bar")]'
         ) % (str(uid), str(uid))
         self.assertEqual(expected, dumps(data, writers))
+
+
+class TestDump(unittest.TestCase):
+
+    def test_dump(self):
+        inputs = [{'foo': 42}, set([2, 3, 7])]
+        output = StringIO()
+        dump(inputs, output)
+        self.assertEqual(
+            '{"foo" 42}\n#{2 3 7}\n',
+            output.getvalue())
+
+    def test_custom_writer(self):
+        point = namedtuple('point', 'x y')
+        writer = lambda p: (p.x, p.y)
+        output = StringIO()
+        dump([point(2, 3)], output, [(point, Symbol('point'), writer)])
+        self.assertEqual('#point (2 3)\n', output.getvalue())
+
+    def test_unknown_handler(self):
+        output = StringIO()
+        dump([Custom(42)], output, default=repr)
+        self.assertEqual('"<Custom(42)>"\n', output.getvalue())

@@ -3,6 +3,8 @@ from ._ast import (
     Symbol,
 )
 from ._extended import (
+    dump,
     dumps,
+    load,
     loads,
 )

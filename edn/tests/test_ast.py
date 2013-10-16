@@ -1,4 +1,4 @@
-from decimal import Decimal
+from StringIO import StringIO
 import unittest
 
 import parsley
@@ -17,7 +17,9 @@ from .._ast import (
     Vector,
     edn,
     parse,
+    parse_stream,
     unparse,
+    unparse_stream,
 )
 
 
@@ -196,6 +198,19 @@ class ParseTestCase(unittest.TestCase):
         self.assertEqual(Map([(1, 2), (3, 4)]), parse('{1 2, 3 4}'))
 
 
+class ParseStreamTestCase(unittest.TestCase):
+
+    def test_iterator(self):
+        stream = StringIO('1 2 #{4 5} "foo" [bar qux]')
+        output = parse_stream(stream)
+        self.assertEqual(1, output.next())
+        self.assertEqual(2, output.next())
+        self.assertEqual(Set([4, 5]), output.next())
+        self.assertEqual(String("foo"), output.next())
+        self.assertEqual(Vector((Symbol('bar'), Symbol('qux'))), output.next())
+        self.assertRaises(StopIteration, output.next)
+
+
 class UnparseTestCase(unittest.TestCase):
 
     def test_nil(self):
@@ -289,3 +304,12 @@ class UnparseTestCase(unittest.TestCase):
         self.assertEqual(
             '#foo "bar"',
             unparse(TaggedValue(Symbol('foo'), String('bar'))))
+
+
+class UnparseStreamTestCase(unittest.TestCase):
+
+    def test_unparse_stream(self):
+        output_stream = StringIO()
+        input_elements = iter([Symbol('foo'), String("bar")])
+        unparse_stream(input_elements, output_stream)
+        self.assertEqual('foo\n"bar"\n', output_stream.getvalue())

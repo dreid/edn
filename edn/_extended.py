@@ -31,7 +31,9 @@ from ._ast import (
     TaggedValue,
     Vector,
     parse,
+    parse_stream,
     unparse,
+    unparse_stream,
 )
 
 
@@ -137,6 +139,30 @@ def loads(string, readers=frozendict(), default=None):
     return from_terms(parse(string), readers, default)
 
 
+def load(stream, readers=frozendict(), default=None):
+    """Interpret an edn stream.
+
+    Load an edn stream lazily as a Python iterator over the elements defined
+    in stream.  We can do this because edn does not mandate a top-level
+    enclosing element.
+
+    See https://github.com/edn-format/edn.
+
+    :param stream: A file-like object of UTF-8 encoded text containing edn data.
+    :param readers: A map from tag symbols to callables.  For '#foo bar'
+        whatever callable the Symbol('foo') key is mapped to will be
+        called with 'bar'.  There are default readers for #inst and #uuid,
+        which can be overridden here.
+    :param default: Called whenever we come across a tagged value that is not
+        mentioned in `readers'.  It gets the symbol and the interpreted value,
+        and whatever it returns is how that value will be interpreted.
+    :return: An iterator of Python objects representing the edn elements in
+        the stream.
+    """
+    for term in parse_stream(stream):
+        yield from_terms(term, readers, default=default)
+
+
 def _get_tag_name(obj):
     tag = getattr(obj, 'tag', None)
     if tag:
@@ -200,4 +226,38 @@ def to_terms(obj, writers=(), default=_default_handler):
 
 
 def dumps(obj, writers=(), default=_default_handler):
+    """Convert a single object to valid edn.
+
+    :param obj: The object to be converted to edn.
+    :param writers: A sequence of (type, symbol, callable) for encoding types
+        that are not immediately supported by edn.  Any object that matches
+        'type' (as determined by isinstance) will be turned into a tagged
+        value, where the tag is 'symbol', and the value is the edn-encoded
+        result of 'callable(obj)'.
+    :param default: Used to handle any object for which there isn't a defined
+        writer.  Unary callable taking the unrecognized object.  Will raise
+        ValueError by default.
+    """
     return unparse(to_terms(obj, writers, default))
+
+
+def dump(objs, output_stream, writers=(), default=_default_handler):
+    """Write a sequence of objects as edn.
+
+    Elements will be separated by UNIX newlines.  This may change in future
+    versions.
+
+    :param objs: An iterable of objects to be written as edn.
+    :param output_stream: A file-like object to write the edn data to.
+    :param writers: A sequence of (type, symbol, callable) for encoding types
+        that are not immediately supported by edn.  Any object that matches
+        'type' (as determined by isinstance) will be turned into a tagged
+        value, where the tag is 'symbol', and the value is the edn-encoded
+        result of 'callable(obj)'.
+    :param default: Used to handle any object for which there isn't a defined
+        writer.  Unary callable taking the unrecognized object.  Will raise
+        ValueError by default.
+
+    """
+    terms = (to_terms(obj, writers, default) for obj in objs)
+    unparse_stream(terms, output_stream)
