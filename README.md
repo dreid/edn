@@ -1,5 +1,8 @@
 # edn
 
+[![Build Status](https://travis-ci.org/dreid/edn.png?branch=master)](https://travis-ci.org/dreid/edn)
+[![Coverage Status](https://coveralls.io/repos/dreid/edn/badge.png)](https://coveralls.io/r/dreid/edn)
+
 Python implementation of [edn](https://github.com/edn-format/edn).
 
 At present, this is unreleased code, and thus the API is very likely to
