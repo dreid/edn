@@ -195,16 +195,16 @@ class LoadTestCase(unittest.TestCase):
 
     def test_single_element(self):
         stream = load(StringIO('#{1 2 3}'))
-        self.assertEqual(set([1, 2, 3]), stream.next())
-        self.assertRaises(StopIteration, stream.next)
+        self.assertEqual(set([1, 2, 3]), next(stream))
+        self.assertRaises(StopIteration, next, stream)
 
     def test_multiple_elements(self):
         stream = load(StringIO('#{1 2 3} "foo"\n43,32'))
-        self.assertEqual(set([1, 2, 3]), stream.next())
-        self.assertEqual(u"foo", stream.next())
-        self.assertEqual(43, stream.next())
-        self.assertEqual(32, stream.next())
-        self.assertRaises(StopIteration, stream.next)
+        self.assertEqual(set([1, 2, 3]), next(stream))
+        self.assertEqual(u"foo", next(stream))
+        self.assertEqual(43, next(stream))
+        self.assertEqual(32, next(stream))
+        self.assertRaises(StopIteration, next, stream)
 
     def test_custom_tag(self):
         text = '#foo [1 2] #foo [3 4]'

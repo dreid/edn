@@ -203,12 +203,12 @@ class ParseStreamTestCase(unittest.TestCase):
     def test_iterator(self):
         stream = StringIO('1 2 #{4 5} "foo" [bar qux]')
         output = parse_stream(stream)
-        self.assertEqual(1, output.next())
-        self.assertEqual(2, output.next())
-        self.assertEqual(Set([4, 5]), output.next())
-        self.assertEqual(String("foo"), output.next())
-        self.assertEqual(Vector((Symbol('bar'), Symbol('qux'))), output.next())
-        self.assertRaises(StopIteration, output.next)
+        self.assertEqual(1, next(output))
+        self.assertEqual(2, next(output))
+        self.assertEqual(Set([4, 5]), next(output))
+        self.assertEqual(String("foo"), next(output))
+        self.assertEqual(Vector((Symbol('bar'), Symbol('qux'))), next(output))
+        self.assertRaises(StopIteration, next, output)
 
 
 class UnparseTestCase(unittest.TestCase):
