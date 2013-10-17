@@ -213,6 +213,10 @@ class ParseStreamTestCase(unittest.TestCase):
 
 class UnparseTestCase(unittest.TestCase):
 
+    def assertIn(self, needle, haystack):
+        self.assertTrue(
+            needle in haystack, '%r not in %r' % (needle, haystack))
+
     def test_nil(self):
         self.assertEqual('nil', unparse(Nil))
         self.assertEqual('("b" nil)', unparse(List((String('b'), Nil))))

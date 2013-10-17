@@ -170,7 +170,7 @@ class LoadsTestCase(unittest.TestCase):
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
 
     def test_nil(self):
-        self.assertIs(None, loads('nil'))
+        self.assertEqual(None, loads('nil'))
 
     def test_bool(self):
         self.assertEqual(True, loads('true'))
@@ -288,9 +288,9 @@ class EncoderTests(unittest.TestCase):
     def test_nested_set(self):
         data = set([(1,), (2,)])
         encoded = to_terms(data)
-        self.assertIn(
-            encoded, (Set((List([1]), List([2]))),
-                      Set((List([2]), List([1])))))
+        expecteds = (Set((List([1]), List([2]))), Set((List([2]), List([1]))))
+        self.assertTrue(
+            encoded in expecteds, '%r not in %r' % (encoded, expecteds))
 
     def test_nested_vector(self):
         data = [[1], [2]]
