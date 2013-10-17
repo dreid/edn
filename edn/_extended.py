@@ -148,7 +148,8 @@ def load(stream, readers=frozendict(), default=None):
 
     See https://github.com/edn-format/edn.
 
-    :param stream: A file-like object of UTF-8 encoded text containing edn data.
+    :param stream: A file-like object of UTF-8 encoded text containing edn
+        data.
     :param readers: A map from tag symbols to callables.  For '#foo bar'
         whatever callable the Symbol('foo') key is mapped to will be
         called with 'bar'.  There are default readers for #inst and #uuid,
@@ -203,7 +204,7 @@ def to_terms(obj, writers=(), default=_default_handler):
          lambda x: Map([(recurse(k), recurse(v)) for k, v in obj.items()])),
         ((set, frozenset), lambda obj: Set(map(recurse, obj))),
         (tuple, lambda obj: List(map(recurse, obj))),
-        (list,  lambda obj: Vector(map(recurse, obj))),
+        (list, lambda obj: Vector(map(recurse, obj))),
         (type(None), constantly(Nil)),
         ((int, float), identity),
         (Decimal, _toExactFloat),

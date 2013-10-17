@@ -53,6 +53,7 @@ def iterGrammar(grammar, bindings, rule, input_stream):
     @param input_stream: The stream to read.  Will be read incrementally.
     """
     tokens = []  # Should really be an explicit queue.
+
     def append(token, error):
         if error.error:
             raise error
@@ -70,4 +71,3 @@ def iterGrammar(grammar, bindings, rule, input_stream):
         for token in tokens:
             yield token
         tokens[:] = []
-

@@ -194,7 +194,7 @@ baz\"""").string(), String('\nfoo\nbar\nbaz'))
 class ParseTestCase(unittest.TestCase):
 
     def test_structure(self):
-        self.assertEqual(Set([1,2,3]), parse('#{1 2 3}'))
+        self.assertEqual(Set([1, 2, 3]), parse('#{1 2 3}'))
         self.assertEqual(Map([(1, 2), (3, 4)]), parse('{1 2, 3 4}'))
 
 

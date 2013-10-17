@@ -78,7 +78,8 @@ class DecoderTests(unittest.TestCase):
 
     def test_symbol(self):
         self.assertEqual(Symbol('foo'), from_terms(Symbol('foo')))
-        self.assertEqual(Symbol('foo', 'bar'), from_terms(Symbol('foo', 'bar')))
+        self.assertEqual(
+            Symbol('foo', 'bar'), from_terms(Symbol('foo', 'bar')))
 
     def test_keyword(self):
         self.assertEqual(
@@ -128,7 +129,8 @@ class DecoderTests(unittest.TestCase):
         inst = TaggedValue(INST, String("1985-04-12T23:20:50Z"))
         result = from_terms(inst)
         self.assertEqual(
-            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
+            datetime.datetime(
+                1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
             result)
 
     def test_uuid(self):
@@ -144,7 +146,7 @@ def reverse(x):
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
-        self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
+        self.assertEqual(set([1, 2, 3]), loads('#{1 2 3}'))
         self.assertEqual(frozendict({1: 2, 3: 4}), loads('{1 2, 3 4}'))
         self.assertEqual(
             frozendict({Keyword(Symbol('foo')): Symbol('bar')}),
@@ -193,12 +195,12 @@ class LoadTestCase(unittest.TestCase):
 
     def test_single_element(self):
         stream = load(StringIO('#{1 2 3}'))
-        self.assertEqual(set([1,2,3]), stream.next())
+        self.assertEqual(set([1, 2, 3]), stream.next())
         self.assertRaises(StopIteration, stream.next)
 
     def test_multiple_elements(self):
         stream = load(StringIO('#{1 2 3} "foo"\n43,32'))
-        self.assertEqual(set([1,2,3]), stream.next())
+        self.assertEqual(set([1, 2, 3]), stream.next())
         self.assertEqual(u"foo", stream.next())
         self.assertEqual(43, stream.next())
         self.assertEqual(32, stream.next())
@@ -219,8 +221,10 @@ class LoadTestCase(unittest.TestCase):
 
 class Custom(object):
     """Used in tests as an unrecognized object."""
+
     def __init__(self, x):
         self.x = x
+
     def __repr__(self):
         return '<Custom(%s)>' % (self.x,)
 
@@ -307,7 +311,8 @@ class EncoderTests(unittest.TestCase):
     def test_nested_custom_writer(self):
         point = namedtuple('point', 'x y')
         writer = lambda p: (p.x, p.y)
-        encoded = to_terms({1: point(2, 3)}, [(point, Symbol('point'), writer)])
+        encoded = to_terms(
+            {1: point(2, 3)}, [(point, Symbol('point'), writer)])
         self.assertEqual(
             Map(((1, TaggedValue(Symbol('point'), List((2, 3)))),)), encoded)
 
@@ -343,8 +348,8 @@ class DumpsTestCase(unittest.TestCase):
     def test_arbitrary_namedtuple(self):
         # Documenting a potentially unexpected behaviour.  Because dumps
         # figures out how to write something based on type, namedtuples will
-        # be dumped as lists.  Since they are very often used for specific types,
-        # that might be surprising.
+        # be dumped as lists.  Since they are very often used for specific
+        # types, that might be surprising.
         foo = namedtuple('foo', 'x y')
         a = foo(1, 2)
         self.assertEqual('(1 2)', dumps(a))
