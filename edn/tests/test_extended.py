@@ -78,7 +78,8 @@ class DecoderTests(unittest.TestCase):
 
     def test_symbol(self):
         self.assertEqual(Symbol('foo'), from_terms(Symbol('foo')))
-        self.assertEqual(Symbol('foo', 'bar'), from_terms(Symbol('foo', 'bar')))
+        self.assertEqual(
+            Symbol('foo', 'bar'), from_terms(Symbol('foo', 'bar')))
 
     def test_keyword(self):
         self.assertEqual(
@@ -128,7 +129,8 @@ class DecoderTests(unittest.TestCase):
         inst = TaggedValue(INST, String("1985-04-12T23:20:50Z"))
         result = from_terms(inst)
         self.assertEqual(
-            datetime.datetime(1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
+            datetime.datetime(
+                1985, 4, 12, 23, 20, 50, tzinfo=iso8601.iso8601.UTC),
             result)
 
     def test_uuid(self):
@@ -144,7 +146,7 @@ def reverse(x):
 class LoadsTestCase(unittest.TestCase):
 
     def test_structure(self):
-        self.assertEqual(set([1,2,3]), loads('#{1 2 3}'))
+        self.assertEqual(set([1, 2, 3]), loads('#{1 2 3}'))
         self.assertEqual(frozendict({1: 2, 3: 4}), loads('{1 2, 3 4}'))
         self.assertEqual(
             frozendict({Keyword(Symbol('foo')): Symbol('bar')}),
@@ -168,7 +170,7 @@ class LoadsTestCase(unittest.TestCase):
         self.assertEqual(TaggedValue(foo, (1, 2)), parsed)
 
     def test_nil(self):
-        self.assertIs(None, loads('nil'))
+        self.assertEqual(None, loads('nil'))
 
     def test_bool(self):
         self.assertEqual(True, loads('true'))
@@ -193,16 +195,16 @@ class LoadTestCase(unittest.TestCase):
 
     def test_single_element(self):
         stream = load(StringIO('#{1 2 3}'))
-        self.assertEqual(set([1,2,3]), stream.next())
-        self.assertRaises(StopIteration, stream.next)
+        self.assertEqual(set([1, 2, 3]), next(stream))
+        self.assertRaises(StopIteration, next, stream)
 
     def test_multiple_elements(self):
         stream = load(StringIO('#{1 2 3} "foo"\n43,32'))
-        self.assertEqual(set([1,2,3]), stream.next())
-        self.assertEqual(u"foo", stream.next())
-        self.assertEqual(43, stream.next())
-        self.assertEqual(32, stream.next())
-        self.assertRaises(StopIteration, stream.next)
+        self.assertEqual(set([1, 2, 3]), next(stream))
+        self.assertEqual(u"foo", next(stream))
+        self.assertEqual(43, next(stream))
+        self.assertEqual(32, next(stream))
+        self.assertRaises(StopIteration, next, stream)
 
     def test_custom_tag(self):
         text = '#foo [1 2] #foo [3 4]'
@@ -219,8 +221,10 @@ class LoadTestCase(unittest.TestCase):
 
 class Custom(object):
     """Used in tests as an unrecognized object."""
+
     def __init__(self, x):
         self.x = x
+
     def __repr__(self):
         return '<Custom(%s)>' % (self.x,)
 
@@ -284,9 +288,9 @@ class EncoderTests(unittest.TestCase):
     def test_nested_set(self):
         data = set([(1,), (2,)])
         encoded = to_terms(data)
-        self.assertIn(
-            encoded, (Set((List([1]), List([2]))),
-                      Set((List([2]), List([1])))))
+        expecteds = (Set((List([1]), List([2]))), Set((List([2]), List([1]))))
+        self.assertTrue(
+            encoded in expecteds, '%r not in %r' % (encoded, expecteds))
 
     def test_nested_vector(self):
         data = [[1], [2]]
@@ -307,7 +311,8 @@ class EncoderTests(unittest.TestCase):
     def test_nested_custom_writer(self):
         point = namedtuple('point', 'x y')
         writer = lambda p: (p.x, p.y)
-        encoded = to_terms({1: point(2, 3)}, [(point, Symbol('point'), writer)])
+        encoded = to_terms(
+            {1: point(2, 3)}, [(point, Symbol('point'), writer)])
         self.assertEqual(
             Map(((1, TaggedValue(Symbol('point'), List((2, 3)))),)), encoded)
 
@@ -343,8 +348,8 @@ class DumpsTestCase(unittest.TestCase):
     def test_arbitrary_namedtuple(self):
         # Documenting a potentially unexpected behaviour.  Because dumps
         # figures out how to write something based on type, namedtuples will
-        # be dumped as lists.  Since they are very often used for specific types,
-        # that might be surprising.
+        # be dumped as lists.  Since they are very often used for specific
+        # types, that might be surprising.
         foo = namedtuple('foo', 'x y')
         a = foo(1, 2)
         self.assertEqual('(1 2)', dumps(a))

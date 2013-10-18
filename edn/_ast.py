@@ -74,6 +74,12 @@ def parse(string):
 
 
 def parse_stream(stream):
+    """Parse a stream of edn elements from a file-like object.
+
+    Yields the abstract syntax for each edn element in 'stream'.
+
+    :param stream: A file-like object to read edn elements from.
+    """
     return iterGrammar(_parsed_edn, _edn_bindings, 'edn', stream)
 
 

@@ -4,6 +4,22 @@ Things for working with parsley.
 
 from ometa.interp import TrampolinedGrammarInterpreter, _feed_me
 from ometa.grammar import OMeta
+from terml import nodes
+
+
+# TODO: Remove these awful monkey patches when parsley released with
+# https://github.com/python-parsley/parsley/pull/43
+
+def _node_hash(node):
+    return hash((nodes.Term, node.tag, node.data, node.args))
+
+nodes.Term.__hash__ = _node_hash
+
+
+def _tag_hash(tag):
+    return hash((nodes.Tag, tag.name))
+
+nodes.Tag.__hash__ = _tag_hash
 
 
 def parseGrammar(definition, name='Grammar'):
@@ -37,6 +53,7 @@ def iterGrammar(grammar, bindings, rule, input_stream):
     @param input_stream: The stream to read.  Will be read incrementally.
     """
     tokens = []  # Should really be an explicit queue.
+
     def append(token, error):
         if error.error:
             raise error
@@ -54,4 +71,3 @@ def iterGrammar(grammar, bindings, rule, input_stream):
         for token in tokens:
             yield token
         tokens[:] = []
-
